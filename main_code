@@ -1,0 +1,799 @@
+import pygame
+from pygame.locals import *
+import sys
+import math
+import random
+import numpy
+from numpy import *
+
+pygame.init()
+pygame.font.init()
+pygame.display.set_caption('Gomoku')
+clock = pygame.time.Clock()
+pygame.time.set_timer(pygame.USEREVENT, 1000)
+
+#globals
+SIZE = (1440, 900)
+SCREEN_COLOUR = (173, 216, 230)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+Line_Check = False
+Difficulty = ''
+Size = 0
+Board = []
+Temp_Board = []
+Turn_count = 0
+Turn = 0
+Time = pygame.time.get_ticks()
+Seconds = 0
+Minutes = 0
+Depth = 0
+
+P1SCORE = 0
+P2SCORE = 0
+P1COLOUR = (66, 58, 214)
+P2COLOUR = (66, 143, 78)
+
+Base_Font = pygame.font.SysFont('freesanbold.ttf', 40)
+
+class TextInput(pygame.sprite.Sprite):
+    def __init__(self, x, y, width=100, height=50, color= BLACK,
+                 bgcolor=WHITE, selectedColor=(190,195,198)):
+        super().__init__()
+        self.text_value = ""
+        self.isSelected = False
+        self.color = color
+        self.bgcolor = bgcolor
+        self.selectedColor = selectedColor
+        self.font = Base_Font
+        self.text = self.font.render(self.text_value, True, self.color)
+        self.bg = pygame.Rect(x, y, width, height)
+       
+    def clicked(self, mousePos):
+        if self.bg.collidepoint(mousePos):
+            self.isSelected = not(self.isSelected)
+            return True
+        return False
+       
+    def update(self, mousePos):
+        pass
+     
+    def update_text(self, new_text):
+        temp = self.font.render(new_text, True, self.color)
+        if temp.get_rect().width >= (self.bg.width - 20):
+            return
+        self.text_value = new_text
+        self.text = temp
+        return self.text_value
+       
+    def render(self, display):
+        self.pos = self.text.get_rect(center = (self.bg.x + self.bg.width/2, self.bg.y + self.bg.height/2))
+        if self.isSelected:
+            pygame.draw.rect(display, self.selectedColor, self.bg)
+        else:
+            pygame.draw.rect(display, self.bgcolor, self.bg)
+        display.blit(self.text, self.pos)
+       
+class CustomGroup(pygame.sprite.Group):
+    def __init__(self):
+        super().__init__()
+        self.current = None
+       
+    def current(self):
+        return self.current
+   
+TextInputGroup = CustomGroup()
+TextInputList = []
+
+ibeam = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_IBEAM)
+
+#format = [Xpos, Ypos, Width, Height]
+MAIN_MENU_RECT = [pygame.Rect(0, 0, 400, 100),
+                  pygame.Rect(520, 100, 400, 100),
+                  pygame.Rect(395, 270, 650, 100),
+                  pygame.Rect(445, 420, 550, 100),
+                  pygame.Rect(590, 600, 260, 100)
+                  ]
+                  
+RULES_RECT = [pygame.Rect(0, 0, 360, 100),
+              pygame.Rect(35, 150, 670, 650),
+              pygame.Rect(770, 150, 620, 300),
+              pygame.Rect(770, 500, 620, 300),
+              pygame.Rect(1200, 800,240, 100)
+              ]
+              
+CPU_DIFF_RECT = [pygame.Rect(420, 250, 600, 80),
+                 pygame.Rect(545, 370, 350, 90),
+                 pygame.Rect(545, 500, 350, 90),
+                 pygame.Rect(545, 630, 350, 90)
+                 ]
+                 
+NAMES_GET_RECT = [pygame.Rect(395, 250, 650, 90),
+                  pygame.Rect(540, 360, 360, 70),
+                  pygame.Rect(450, 530, 540, 80)
+                  ]
+                  
+BOARD_SIZE_RECT = [pygame.Rect(835, 540, 180, 60),
+                   pygame.Rect(835, 620, 180, 60)
+                   ]
+                   
+MAIN_PROG_RECT = [pygame.Rect(100, 130, 300, 90),
+                  pygame.Rect(50, 350, 400, 150),
+                  pygame.Rect(140, 650, 220, 90),
+                  pygame.Rect(625, 100, 600, 110),
+                  pygame.Rect(600, 400, 650, 340)
+                  ]
+                  
+
+FONT100 = pygame.font.SysFont('freesanbold.ttf', 100)
+FONT75 = pygame.font.SysFont('freesanbold.ttf', 75)
+FONT68 = pygame.font.SysFont('freesanbold.ttf', 68)
+FONT65 = pygame.font.SysFont('freesanbold.ttf', 65)
+FONT55 = pygame.font.SysFont('freesanbold.ttf', 55)
+FONT53 = pygame.font.SysFont('freesanbold.ttf', 53)
+FONT50 = pygame.font.SysFont('freesanbold.ttf', 50)
+
+screen = pygame.display.set_mode(SIZE)
+screen.fill(SCREEN_COLOUR)
+
+def Draw_Main_Menu():
+    for i in range (5):
+        pygame.draw.rect(screen, WHITE, (MAIN_MENU_RECT[i]), 4)
+        pygame.display.flip()
+        
+    MENUT0 = FONT100.render('Main Menu', True, BLACK)
+    MenuRect0 = MENUT0.get_rect()
+    MenuRect0.center = (200, 50)
+    screen.blit(MENUT0, MenuRect0)
+    
+    MENUT1 = FONT75.render('Gomoku Player', True, BLACK)
+    MenuRect1 = MENUT1.get_rect()
+    MenuRect1.center = (720, 150)
+    screen.blit(MENUT1, MenuRect1)
+    
+    MENUT2 = FONT100.render('Play Vs Computer', True, BLACK)
+    MenuRect2 = MENUT2.get_rect()
+    MenuRect2.center = (720, 320)
+    screen.blit(MENUT2, MenuRect2)
+    
+    MENUT3 = FONT100.render('Play Vs Human', True, BLACK)
+    MenuRect3 = MENUT3.get_rect()
+    MenuRect3.center = (720,  470)
+    screen.blit(MENUT3, MenuRect3)
+    
+    MENUT4 = FONT100.render('Rules', True, BLACK)
+    MenuRect4 = MENUT4.get_rect()
+    MenuRect4.center = (720, 650)
+    screen.blit(MENUT4, MenuRect4)
+    pygame.display.flip()
+    
+    #formula of coords is 2i (for less extreme) and 2i+1 (for more extreme) for i>=0
+    X_LIST = [395, 1045, 445, 995, 590, 850]
+    Y_LIST = [270, 370, 420, 520, 600, 700]
+    BUTTON_LIST = ['CPU_diff', 'Player_name', 'Rules']
+    Identifier = 'MENU'
+    return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+   
+def Draw_Rules(temp):
+    for i in range (5):
+        pygame.draw.rect(screen, WHITE, (RULES_RECT[i]), 4)
+        pygame.display.flip()
+        
+    RULEST0 = FONT100.render('The Rules', True, BLACK)
+    RulesRect0 = RULEST0.get_rect()
+    RulesRect0.center = (180, 50)
+    screen.blit(RULEST0, RulesRect0)
+    
+    RULEST1 = FONT53.render('•   Gomoku is played on a 15x15 ', True, BLACK)
+    RulesRect1 = RULEST1.get_rect()
+    RulesRect1.center = (345, 200)
+    screen.blit(RULEST1, RulesRect1)
+    
+    RULEST2 = FONT53.render('board. ', True, BLACK)
+    RulesRect2 = RULEST2.get_rect()
+    RulesRect2.center = (125, 240)
+    screen.blit(RULEST2, RulesRect2)
+    
+    RULEST3 = FONT53.render('•   Black plays first, and players ', True, BLACK)
+    RulesRect3 = RULEST3.get_rect()
+    RulesRect3.center = (345, 315)
+    screen.blit(RULEST3, RulesRect3)
+    
+    RULEST4 = FONT53.render('alternate in placing a stone of their ', True, BLACK)
+    RulesRect4 = RULEST4.get_rect()
+    RulesRect4.center = (375, 355)
+    screen.blit(RULEST4, RulesRect4)
+    
+    RULEST5 = FONT53.render('colour on an empty intersection. ', True, BLACK)
+    RulesRect5 = RULEST5.get_rect()
+    RulesRect5.center = (351, 395)
+    screen.blit(RULEST5, RulesRect5)
+    
+    RULEST6 = FONT53.render('•   The winner is the first player to ', True, BLACK)
+    RulesRect6 = RULEST6.get_rect()
+    RulesRect6.center = (360, 470)
+    screen.blit(RULEST6, RulesRect6)
+    
+    RULEST7 = FONT53.render('form an unbroken chain of five ', True, BLACK)
+    RulesRect7 = RULEST7.get_rect()
+    RulesRect7.center = (334, 510)
+    screen.blit(RULEST7, RulesRect7)
+    
+    RULEST8 = FONT53.render('stones horizontally, vertically, or ', True, BLACK)
+    RulesRect8 = RULEST8.get_rect()
+    RulesRect8.center = (350, 550)
+    screen.blit(RULEST8, RulesRect8)
+    
+    RULEST9 = FONT53.render('diagonally. ', True, BLACK)
+    RulesRect9 = RULEST9.get_rect()
+    RulesRect9.center = (160, 590)
+    screen.blit(RULEST9, RulesRect9)
+    
+    RULEST10 = FONT53.render('•   Once placed, stones cannot be ', True, BLACK)
+    RulesRect10 = RULEST10.get_rect()
+    RulesRect10.center = (355, 665)
+    screen.blit(RULEST10, RulesRect10)
+    
+    RULEST11 = FONT53.render('moved or removed from the board. ', True, BLACK)
+    RulesRect11 = RULEST11.get_rect()
+    RulesRect11.center = (365, 715)
+    screen.blit(RULEST11, RulesRect11)
+   
+    RULEST12 = FONT100.render('Return', True, BLACK)
+    RulesRect12 = RULEST12.get_rect()
+    RulesRect12.center = (1320, 850)
+    screen.blit(RULEST12, RulesRect12)
+    pygame.display.flip()
+    
+    X_LIST = [1200, 1440]
+    Y_LIST = [800, 900]
+    BUTTON_LIST = [temp]
+    Identifier = 'RULES'
+    return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+
+def Draw_CPU_diff():
+    pygame.draw.rect(screen, (SCREEN_COLOUR),(380, 235, 680, 540), 0)
+    pygame.draw.rect(screen, WHITE, (380, 235, 680, 540), 4)
+    pygame.display.flip()
+   
+    for i in range (4):
+        pygame.draw.rect(screen, WHITE, (CPU_DIFF_RECT[i]), 4)
+        pygame.display.flip()
+        
+    CPUDIFFT0 = FONT65.render('Select a CPU dificulty:', True, BLACK)
+    CPUDIFFRect0 = CPUDIFFT0.get_rect()
+    CPUDIFFRect0.center = (720, 290)
+    screen.blit(CPUDIFFT0, CPUDIFFRect0)
+    
+    CPUDIFFT1 = FONT100.render('Easy', True, BLACK)
+    CPUDIFFRect1 = CPUDIFFT1.get_rect()
+    CPUDIFFRect1.center = (720, 415)
+    screen.blit(CPUDIFFT1, CPUDIFFRect1)
+    
+    CPUDIFFT2 = FONT100.render('Medium', True, BLACK)
+    CPUDIFFRect2 = CPUDIFFT2.get_rect()
+    CPUDIFFRect2.center = (720, 545)
+    screen.blit(CPUDIFFT2, CPUDIFFRect2)
+    
+    CPUDIFFT3 = FONT100.render('Hard', True, BLACK)
+    CPUDIFFRect3 = CPUDIFFT3.get_rect()
+    CPUDIFFRect3.center = (720, 675)
+    screen.blit(CPUDIFFT3, CPUDIFFRect3)
+    pygame.display.flip()
+    
+    X_LIST = [545, 895, 545, 895, 545, 895]
+    Y_LIST = [370, 460, 500, 590, 630, 720]
+    BUTTON_LIST = ['Easy', 'Medium', 'Hard']
+    Identifier = 'CPU_DIFF'
+    return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+    
+def Draw_P1_name_get():
+      pygame.draw.rect(screen, (SCREEN_COLOUR),(380, 235, 680, 540), 0)
+      pygame.draw.rect(screen, WHITE, (380, 235, 680, 430), 4)
+     
+      TextInputGroup.add(TextInput(x=605, y=440, width = 230))
+      pygame.display.flip()
+     
+      for i in range (3):
+          pygame.draw.rect(screen, WHITE, (NAMES_GET_RECT[i]), 4)
+          pygame.display.flip()
+         
+      NAMEST0 = FONT68.render('Please enter Player names:', True, BLACK)
+      NAMESRect0 = NAMEST0.get_rect()
+      NAMESRect0.center = (720, 290)
+      screen.blit(NAMEST0, NAMESRect0)
+      
+      NAMEST1 = FONT68.render('Player 1 name:', True, BLACK)
+      NAMESRect1 = NAMEST1.get_rect()
+      NAMESRect1.center = (720, 395)
+      screen.blit(NAMEST1, NAMESRect1)
+      
+      NAMEST2 = FONT55.render('(Player names must differ)', True, BLACK)
+      NAMESRect2 = NAMEST2.get_rect()
+      NAMESRect2.center = (720, 567)
+      screen.blit(NAMEST2, NAMESRect2)
+      pygame.display.flip()
+      
+      #no buttons, only inputs - requires change of enter key code
+      Identifier = 'NAMES'
+      X_LIST = []
+      Y_LIST = []
+      BUTTON_LIST = []
+      return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+
+def Draw_P2_name_get():
+      for current in TextInputGroup:
+          TextInputGroup.remove(current)
+     
+      pygame.draw.rect(screen, (SCREEN_COLOUR),(540, 360, 360, 70), 0)
+      pygame.draw.rect(screen, WHITE, (540, 360, 360, 70), 4)
+     
+      TextInputGroup.add(TextInput(x=605, y=440, width = 230))
+      pygame.display.flip()
+      
+      NAMES2T0 = FONT68.render('Player 2 name:', True, BLACK)
+      NAMES2Rect0 = NAMES2T0.get_rect()
+      NAMES2Rect0.center = (720, 395)
+      screen.blit(NAMES2T0, NAMES2Rect0)
+      pygame.display.flip()
+      
+      Identifier = 'P2'
+      return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+     
+def Draw_Fail(error):
+      pygame.draw.rect(screen, (SCREEN_COLOUR), (450, 530, 540, 80), 0)
+      pygame.draw.rect(screen, (WHITE), (415, 530, 610, 80), 4)
+      pygame.display.flip()
+      
+      if error == 'Name':
+        FAILT0 = FONT55.render('ERROR: player name are same', True, BLACK)
+        FAILRect0 = FAILT0.get_rect()
+        FAILRect0.center = (720, 570)
+        screen.blit(FAILT0, FAILRect0)
+   
+      elif error == 'Int':
+        FAILT1 = FONT55.render('ERROR: Invalid input', True, BLACK)
+        FAILRect1 = FAILT1.get_rect()
+        FAILRect1center = (720, 570)
+        screen.blit(FAILT1, FAILRect1)
+      pygame.display.flip()
+      
+def Draw_Main_Program(Turn):
+      for i in range (5):
+          pygame.draw.rect(screen, WHITE, MAIN_PROG_RECT[i], 4)
+          pygame.display.flip()
+
+      MAINT0 = FONT50.render('Player 1s score: ' + str(P1SCORE), True, BLACK)
+      MAINRect0 = MAINT0.get_rect()
+      MAINRect0.center = (225, 390)
+      screen.blit(MAINT0, MAINRect0)
+      
+      MAINT1 = FONT50.render('Player 2s score: ' + str(P2SCORE), True, BLACK)
+      MAINRect1 = MAINT1.get_rect()
+      MAINRect1.center = (225, 460)
+      screen.blit(MAINT1, MAINRect1)
+      
+      MAINT2 = FONT100.render('Rules', True, BLACK)
+      MAINRect2 = MAINT2.get_rect()
+      MAINRect2.center = (250, 695)
+      screen.blit(MAINT2, MAINRect2)
+      pygame.display.flip()
+      
+      X_LIST = [140, 360]
+      Y_LIST = [650, 740]
+      BUTTON_LIST = ['Rules']
+      Identifier = 'MAIN'
+      return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+      
+def Draw_Board_Size_Get(Turn):
+      X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Main_Program(Turn)
+      for current in TextInputGroup:
+          TextInputGroup.remove(current)
+     
+      pygame.draw.rect(screen, SCREEN_COLOUR, (600, 400, 650, 340), 0)
+      pygame.draw.rect(screen, WHITE, (600, 400, 650, 340), 4)
+      
+      for i in range (2):
+        pygame.draw.rect(screen, WHITE, BOARD_SIZE_RECT[i], 4)
+        pygame.display.flip()
+      
+      BOARDT0 = FONT50.render('Please select your desired', True, BLACK)
+      BOARDRect0= BOARDT0.get_rect()
+      BOARDRect0.center = (925, 460)
+      screen.blit(BOARDT0, BOARDRect0)
+      
+      BOARDT1 = FONT50.render('board size:', True, BLACK)
+      BOARDRect1= BOARDT1.get_rect()
+      BOARDRect1.center = (925, 500)
+      screen.blit(BOARDT1, BOARDRect1)
+      
+      BOARDT2 = FONT75.render('15x15', True, BLACK)
+      BOARDRect2= BOARDT2.get_rect()
+      BOARDRect2.center = (925, 570)
+      screen.blit(BOARDT2, BOARDRect2)
+      
+      BOARDT3 = FONT75.render('19x19', True, BLACK)
+      BOARDRect3= BOARDT2.get_rect()
+      BOARDRect3.center = (925, 650)
+      screen.blit(BOARDT3, BOARDRect3)
+      pygame.display.flip()
+      
+      X_LIST = [140, 360, 835, 1015, 835, 1015]
+      Y_LIST = [650, 740, 540, 600, 620, 680]
+      BUTTON_LIST = ['Rules', '15', '19']
+      Identifier = 'BOARD_SIZE'
+      return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+      
+def Draw_Next(Next, Difficulty, Size, Temp_Board, Board, Turn):
+      if Next == 'CPU_diff':
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_CPU_diff()
+        
+      elif Next == 'Player_name':
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_P1_name_get()
+        
+      elif Next == '15' or Next == '19':
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Draw_Game(Next)
+        
+      elif Next == 'MENU':
+        Clean_Screen()
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Main_Menu()
+
+      elif Next in ('Easy', 'Medium', 'Hard'):
+        Clean_Screen()
+        Difficulty = Next
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Board_Size_Get(Turn)
+    
+      elif Next == 'Undo':
+         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn = Undo_Move(Size, Board, Temp_Board, Turn_count, Turn)
+
+      else:
+        Clean_Screen()
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Board_Size_Get(Turn)
+        
+      return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Difficulty, Size, Board, Turn
+      
+def Undo_Move(Size, Board, Temp_Board, Turn_Count, Turn):
+    X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Draw_Game(Size)
+    Board = []
+    
+    for Count1 in range (Size):
+        BoardRow = []
+        for Count2 in range (Size):
+            if Temp_Board[Count1][Count2] == 'O':
+              BoardPosition = 'O'
+            elif Temp_Board[Count1][Count2] == 'X':
+              BoardPosition = 'X'
+            else:
+              BoardPosition = ' '
+            BoardRow.append(BoardPosition)
+        Board.append(BoardRow)
+        
+    Turn_Count, Turn = Player_Turn (Turn_count, Turn)
+    if Size == 15:
+        for i in range (Size):
+            for j in range (Size):
+                if Temp_Board[i][j] == 'X':
+                  pygame.draw.circle(screen, P1COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
+                  pygame.display.flip()
+                elif Temp_Board[i][j] == 'O':
+                  pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
+                  pygame.display.flip()
+    elif Size == 19:
+        for i in range (Size):
+            for j in range (Size):
+                if Temp_Board[i][j] == 'X':
+                  pygame.draw.circle(screen, P1COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
+                  pygame.display.flip()
+                elif Temp_Board[i][j] == 'O':
+                  pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
+                  pygame.display.flip()
+    return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn
+
+def Clean_Screen():
+    screen.fill(SCREEN_COLOUR)
+    
+def Draw_Game(Size):
+    Size = int(Size)
+    pygame.draw.rect(screen, SCREEN_COLOUR, (500, 260, 900, 600), 0)
+    pygame.draw.rect(screen, WHITE, (500, 260, 900, 585), 4)
+    
+    if Size == 15:
+        for i in range (14):
+            for j in range (14):
+                pygame.draw.rect(screen, WHITE, ((610+35*i), (313+35*j), 35, 35), 1)
+                
+        pygame.draw.rect(screen, WHITE, (1175, 510, 200, 100), 4)
+        
+        GAMET0 = FONT100.render('Undo', True, BLACK)
+        GAMERect0= GAMET0.get_rect()
+        GAMERect0.center = (1275, 560)
+        screen.blit(GAMET0, GAMERect0)
+        pygame.display.flip  
+          
+    elif Size == 19:
+        for i in range (18):
+            for j in range (18):
+                pygame.draw.rect(screen, WHITE, ((580+30*i), (290+30*j), 30, 30), 1)
+        
+        pygame.draw.rect(screen, WHITE, (1175, 510, 200, 100), 4)
+        
+        GAMET1 = FONT75.render('Undo', True, BLACK)
+        GAMERect1= GAMET1.get_rect()
+        GAMERect1.center = (1275, 560)
+        screen.blit(GAMET1, GAMERect1)
+        pygame.display.flip
+    
+    for Count1 in range (Size):
+        BoardRow = []
+        for Count2 in range (Size):
+            BoardPosition = ' '
+            BoardRow.append(BoardPosition)
+        Board.append(BoardRow)
+    
+    X_LIST = [140, 360, 1175, 1275]
+    Y_LIST = [650, 740, 510, 610]
+    BUTTON_LIST = ['Rules', 'Undo']
+    Identifier = 'GAME'
+    return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size
+
+def Player_Turn (Turn_count, Turn):
+  if Turn_count == 0:
+    if random.randint(0,1) == 1:  
+      Turn = 1
+    else:
+        Turn = 2
+  else:
+    if Turn == 1:
+        Turn = 2
+    elif Turn == 2:
+        Turn = 1
+  Turn_count += 1
+
+  pygame.draw.rect(screen, SCREEN_COLOUR, (650, 115, 550, 90), 0)
+  TURNT0 = FONT75.render('Player ' + str(Turn)  + 's turn: ', True, BLACK)
+  TURNRect0 = TURNT0.get_rect()
+  TURNRect0.center = (925, 155)
+  screen.blit(TURNT0, TURNRect0)
+  pygame.display.flip()
+
+  return Turn_count, Turn
+
+def Update_Board(Turn, XIndex, YIndex):
+  if Turn == 1:
+    Colour = P1COLOUR
+  else:
+    Colour = P2COLOUR
+    
+  if Size == 15:
+    pygame.draw.circle(screen, Colour, (XIndex*35 + 610, YIndex* 35 + 313), 15, 0)
+  else:
+    pygame.draw.circle(screen, Colour, (XIndex*30 + 580, YIndex* 30 + 290), 12, 0)
+  pygame.display.flip()
+
+def Make_Move(Turn, Turn_count, Board, x, y, Temp_Board):
+  Temp_Board = numpy.copy(Board)
+  if Size == 15:
+    if x % 35 <= 10:
+      XIndex = math.floor(x/35)
+    elif x % 35 >= 20:
+      XIndex = math.ceil(x/35)
+    
+    if y % 35 <= 10:
+      YIndex = math.floor(y/35)
+    elif y % 35 >= 25:
+      YIndex = math.ceil(y/35)
+    
+  elif Size == 19:
+    if x % 30 <= 10:
+      XIndex = math.floor(x/30)
+    elif x % 30 >= 20:
+      XIndex = math.ceil(x/30)
+    
+    if y % 30 <= 10:
+      YIndex = math.floor(y/30)
+    elif y % 30 >= 20:
+      YIndex = math.ceil(y/30)
+    
+  if Board[XIndex][YIndex] == ' ':
+    Turn_count, Turn = Player_Turn(Turn_count, Turn)
+    if Turn == 1:
+        Board[XIndex][YIndex] = 'X'
+    elif Turn == 2:
+        Board[XIndex][YIndex] = 'O'    
+    Update_Board(Turn, XIndex, YIndex)
+  return Board, Turn, Turn_count, Temp_Board
+
+def Win_Check(Board, Size):
+   for x in range (2, Size-2):
+    for y in range (2, Size-2):
+       if Board[x-2][y] == Board[x-1][y] == Board[x][y] == Board[x+1][y] == Board [x+2][y] != ' ':
+        Line_Check = True
+        return Line_Check
+       
+       elif Board[x][y-2] == Board[x][y-1] == Board[x][y] == Board[x][y+1] == Board [x][y+2] != ' ':
+        Line_Check = True
+        return Line_Check
+       
+       elif Board[x-2][y-2] == Board[x-1][y-1] == Board[x][y] == Board[x+1][y+1] == Board [x+2][y+2] != ' ':
+        Line_Check = True
+        return Line_Check
+       
+       elif Board[x-2][y+2] == Board[x-1][y+1] == Board[x][y] == Board[x+1][y-1] == Board [x+2][y-2] != ' ':
+        Line_Check = True
+        return Line_Check
+       
+def Check_Draw(Board, Size):
+  for x in range (Size):
+    for y in range (Size):
+      if Board[x][y] == ' ':
+        Line_Check = False
+        return Line_Check
+
+def Output_Winner(Turn):
+  pygame.draw.rect(screen, SCREEN_COLOUR, (600, 380, 510, 340), 0)
+  pygame.draw.rect(screen, WHITE, (600, 380, 510, 340), 4)
+  pygame.draw.rect(screen, WHITE, (770, 565, 180, 70), 4)
+  
+  WINNERT0 = FONT75.render('Player ' + str(Turn) + ' wins!', True, BLACK)
+  WINNERRect0= WINNERT0.get_rect()
+  WINNERRect0.center = (860, 450)
+  screen.blit(WINNERT0, WINNERRect0)
+
+  WINNERT1 = FONT65.render('Replay', True, BLACK)
+  WINNERRect1 = WINNERT1.get_rect()
+  WINNERRect1.center = (860, 600)
+  screen.blit(WINNERT1, WINNERRect1)
+  pygame.display.flip
+
+  X_LIST = [770, 950]
+  Y_LIST = [565, 635]
+  BUTTON_LIST = ['Replay']
+  Identifier = 'GAME_OVER'
+  return X_LIST, Y_LIST, BUTTON_LIST, Identifier
+
+#generic concept of min-max code, doesn't really do anything yet
+#don't read whole game, read as many moves as possible and then pick move based on possible outcomes e.g. open 4
+#perchance create a count
+def mini_max(Board, Depth, Turn): #cpu turn == turn 1
+   if Win_Check(Board, Size) or Check_Draw(Board, Size):
+      if Check_Draw(Board, Size):
+         return 0
+      elif Turn == 1:
+         return +1
+      elif Turn == 2:
+         return -1
+      
+   elif Turn == 1:
+      Optimal = -inf
+      for i in range (Size):
+         for j in range (Size):
+            if Board[i][j] == ' ': #make the move happen
+               Board[i][j] = 'X' #maybe more nuanced than that
+               Current_Score = mini_max(Board, Depth+1, 2)
+               Optimal =  max(Current_Score, Optimal)
+               return Optimal
+   else:
+      Optimal = inf
+      for i in range (Size):
+         for j in range (Size):
+            if Board[i][j] == ' ':
+               Board[i][j] == 'O'
+               Current_Score = mini_max(Board, Depth+1, 1)
+               Optimal =  min(Current_Score, Optimal)
+               return Optimal
+
+#make different results give different amounts of +/- score
+#exposed 4 makes +/- inf (game ends), exposed 3 = +/- 2 else = +/- 1
+#blocking could result in same
+
+X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Main_Menu()
+X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Draw_Game(15)
+var = mini_max(Board, Depth, 1)
+print(var)
+
+while True:
+    mouse_pos = pygame.mouse.get_pos()
+    for event in pygame.event.get():
+        if event.type == pygame.quit:
+            sys.exit
+            pygame.quit()
+           
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for textinput in TextInputGroup:
+                if textinput.clicked(mouse_pos):
+                    if TextInputGroup.current:
+                        TextInputGroup.current.isSelected = False
+                    textinput.isSelected = True
+                    TextInputGroup.current = textinput
+                    break
+                  
+            for i in range (int(len(X_LIST)/2)):
+                if (X_LIST[2*i] <= mouse_pos[0] <= X_LIST[2*i+1]) and (Y_LIST[2*i] <= mouse_pos[1] <= Y_LIST[2*i+1]):
+                     Next = BUTTON_LIST[i]
+                     if Next == 'Rules':
+                        Clean_Screen()
+                        temp = Identifier
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Rules(temp)
+                        break
+                     elif Next == 'Replay':
+                        if Turn == 1:
+                            P1SCORE += 1
+                        else:
+                            P2SCORE += 1
+                        Clean_Screen()
+                        Line_Check = False
+                        Board = []
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Main_Program(Turn)
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Draw_Game(Size)
+                        break
+                     else:
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Difficulty, Size, Board, Turn = Draw_Next(Next, Difficulty, Size, Temp_Board, Board, Turn)
+                        break
+                          
+            if not Line_Check:
+              if Identifier == 'GAME':
+                  if Size == 15:
+                    x = (mouse_pos[0]-610)
+                    y = (mouse_pos[1]-313)
+                    if(x % 35 <= 10 or x % 35 >= 25) and (y % 35 <= 10 or y % 35 >= 25) and (-10 <= x <= 500 and -10 <= y <= 500):
+                      Board, Turn, Turn_count, Temp_Board = Make_Move(Turn, Turn_count, Board, x, y, Temp_Board)
+                      Line_Check = Win_Check(Board, Size)
+                      if Line_Check:
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Output_Winner(Turn)
+                     
+                  elif Size == 19:
+                    x = (mouse_pos[0]-580)
+                    y = (mouse_pos[1]-290)
+                    if (x % 30 <= 10 or x % 30 >= 20) and (y % 30 <= 10 or y % 30 >= 20) and (-10 <= x <= 600 and -10<= y <+ 600):
+                      Board, Turn, Turn_count, Temp_Board = Make_Move(Turn, Turn_count, Board, x, y, Temp_Board)
+                      Line_Check = Win_Check(Board, Size)
+                      if Line_Check:
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Output_Winner(Turn)
+                    
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                TextInputGroup.current.update_text(TextInputGroup.current.text_value[:-1])
+                
+            if event.key == pygame.K_RETURN:
+                if TextInputGroup.current:
+                    TextInputList.append(TextInputGroup.current.text_value)
+                    if TextInputGroup.current.text_value != '':
+                        if Identifier == 'NAMES':
+                            X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_P2_name_get()
+                        elif TextInputGroup.current.text_value != TextInputList[0]:
+                            TextInputList.append(TextInputGroup.current.text_value)
+                            Clean_Screen()
+                            X_LIST, Y_LIST, BUTTON_LIST, Identifier = Draw_Board_Size_Get(Turn)
+                        else:
+                            Draw_Fail('Name')
+
+        if event.type == pygame.USEREVENT: 
+          if Identifier == 'GAME':
+            Seconds += 1
+            if Seconds == 60:
+              Minutes += 1
+              Seconds = 0
+          else:
+            Seconds = 0
+            Minutes = 0
+                
+        if event.type == pygame.TEXTINPUT:
+            Current_text = TextInputGroup.current.update_text(TextInputGroup.current.text_value + event.text)
+    for textinput in TextInputGroup:
+        textinput.update(mouse_pos)
+        textinput.render(screen)
+    if TextInputGroup.current and TextInputGroup.current.bg.collidepoint(mouse_pos):
+        pygame.mouse.set_cursor(ibeam)
+    else:
+        pygame.mouse.set_cursor(pygame.cursors.Cursor())
+        
+    if Identifier == 'GAME':
+      pygame.draw.rect(screen, SCREEN_COLOUR, (120, 150, 260, 50), 0)
+      MAINT0 = FONT75.render('Timer: ' + str(Minutes) + ':' + str(Seconds), True, BLACK)
+      MAINRect0 = MAINT0.get_rect()
+      MAINRect0.center = (235, 175)
+      screen.blit(MAINT0, MAINRect0)
+      pygame.display.flip()
+
+    pygame.display.update()
