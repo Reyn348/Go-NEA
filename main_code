@@ -724,41 +724,6 @@ class Game():
                     X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn)
                     return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board
 
-#generic concept of mini-max code, doesn't really do anything yet
-#don't read whole game, read as many moves as possible and then pick move based on possible outcomes e.g. open 4
-#perchance create a count
-def mini_max(Board, Depth, Turn): #cpu turn == turn 1
-   if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size):
-      if Game.Check_Draw(Board, Size):
-         return 0
-      elif Turn == 1:
-         return +1
-      elif Turn == 2:
-         return -1
-      
-   elif Turn == 1:
-      Optimal = -inf
-      for i in range (Size):
-         for j in range (Size):
-            if Board[i][j] == ' ': #make the move happen
-               Board[i][j] = 'X' #maybe more nuanced than that
-               #Current_Score = mini_max(Board, Depth+1, 2)
-               #Optimal =  max(Current_Score, Optimal)
-               return 99#Optimal
-   else:
-      Optimal = inf
-      for i in range (Size):
-         for j in range (Size):
-            if Board[i][j] == ' ':
-               Board[i][j] == 'O'
-              #Current_Score = mini_max(Board, Depth+1, 1)
-              # Optimal =  min(Current_Score, Optimal)
-               return 10 #Optimal
-
-#make different results give different amounts of +/- score
-#exposed 4 makes +/- inf (game ends), exposed 3 = +/- 2 else = +/- 1
-#blocking could result in same
-
 X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu()
 
 while True:

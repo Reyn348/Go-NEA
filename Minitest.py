@@ -70,7 +70,7 @@ def Player_Turn(Board, Turn, Move):
     Turn += 1
   return Board, Turn, Move
 
-def Update_HeatMap(HeatMap, Move, HeatTruth):
+'''def Update_HeatMap(HeatMap, Move, HeatTruth):
     Move_X = int(Move[0])
     Move_Y = int(Move[1])
     HeatMap[Move_X][Move_Y] = -1
@@ -101,8 +101,9 @@ def Reset_HeatMap(HeatMap):
 
 def get_Heat(list):
   return list[2]
-
-def Score_calc(piece, Maximising):
+'''
+########
+'''def Score_calc(piece, Maximising):
       best = 0
       New_x = Move[0]
       New_y = Move[1]
@@ -130,107 +131,122 @@ def Score_calc(piece, Maximising):
         return best
       else:
         #best *= -1
-        return best
+        return best'''
+
+def Score_calc(Turn):
+    piece = "X" if Turn%2 != 0 else 'O'
+    best = 0
+    for New_x in range (Size):
+          for New_y in range (Size):
+              hcount = vcount = ldcount = rdcount = 0
+              for i in range (4):
+                try:
+                    if Board[New_x + i][New_y] == piece:
+                        hcount += 1
+                except: pass
+                try:
+                    if Board[New_x][New_y + i] == piece:
+                        vcount += 1
+                except: pass
+                try:
+                    if Board[New_x + i][New_y + i] == piece:
+                        rdcount += 1
+                except: pass
+                try:
+                    if Board[New_x - i][New_y + 1] == piece:
+                        ldcount += 1
+                except: pass
+                try:
+                    if Board[New_x + i][New_y - 1] == piece:
+                        ldcount += 1
+                except: pass
+                try:
+                    if Board[New_x - i][New_y - i] == piece:
+                        rdcount += 1
+                except: pass
+                best = max((hcount, vcount, ldcount, rdcount, best))
+    return best
 
 def Reset_Depth():
       return 20
 
-def Ai_Move(Board, HeatMap, Turn, Size, Depth, Alpha, Beta, Optimal_score, Maximising):
-        AvailableMoves = GetAvailableMoves(Size, HeatMap)
-        if (Win_Check(Board, Size) == True or Check_Draw(Board, Size) == True) or Depth <= 0:
-            if Check_Draw(Board, Size):
-              return 0
-            if Depth == 0:
-              print('idk')
-              Current_Score = max((Score_calc('X', Maximising), Score_calc('O', Maximising)))
-              Optimal_score = max((Optimal_score, Current_Score))
-              Alpha = max((Alpha, Current_Score))
-              return Optimal_score, None, None
-            elif Turn == 1:
-              return -10, curent_best_move[0], curent_best_move[1] 
-            elif Turn == 2:
-              return +10, curent_best_move[0], curent_best_move[1]
-
-        if Maximising:
-              curent_best_move = None
-              for i in AvailableMoves:
-                print(AvailableMoves)
-                Current_score = float('-inf')
-                if Board[i[0]][i[1]] == ' ':
-                  print('actually max')
-                  Board[i[0]][i[1]] = 'X'
-                  HeatMap = Update_HeatMap(HeatMap, [i[0], i[1]], HeatTruth)
-                  print(Board)
-                  Current_Score, x, y = Ai_Move(Board, HeatMap, Turn, Size, Depth -1, Alpha, Beta, Optimal_score, False)
-                  if Current_score > Optimal_score:
-                    Optimal_score = Current_score
-                    current_best_move = [[i[0]],[i[1]]]
-                  Alpha = max((Alpha, Current_Score))
-                  Board[i[0]][i[1]] = ' '
-                  if Beta <= Alpha:
-                    break
-
-        else:
-              '''for j in AvailableMoves:
-                if Board[j[0]][j[1]] == ' ':
-                  print('min')
-                  Board[j[0]][j[1]] = 'O'
-                  HeatMap = Update_HeatMap(HeatMap, [j[0], j[1]], HeatTruth)
-                  AvailableMoves = GetAvailableMoves(Size, HeatMap)
-                  print(Board)
-                  Current_Score, x, y = Ai_Move(Board, HeatMap, Turn, Size, Move, Depth - 1, Alpha, Beta, Max, Min, True)
-                  Optimal_score= max((Min_score, Current_Score))
-                  Beta = max((Beta, Current_Score))
-                  Board[j[0]][j[1]] = ' '
-                  if Optimal_score == Current_Score:
-                    Move = [j[0], j[1]]
-                  Depth = Reset_Depth()
-                  if Beta <= Alpha:
-                     break
-                else:
-                  Current_Score, x, y = Ai_Move(Board, HeatMap, Turn, Size, Move, Depth, Alpha, Beta, Max, Min, Maximising)'''
-              curent_best_move = None
-              for i in AvailableMoves:
-                Current_score = float('inf')
-                if Board[i[0]][i[1]] == ' ':
-                  print('min')
-                  Board[i[0]][i[1]] = 'O'
-                  HeatMap = Update_HeatMap(HeatMap, [i[0], i[1]], HeatTruth)
-                  print(Board)
-                  Current_Score, x, y = Ai_Move(Board, HeatMap, Turn, Size, Depth -1, Alpha, Beta, Optimal_score, True)
-                  if Current_score < Optimal_score:
-                    Optimal_score = Current_score
-                    current_best_move = [i[0][i[1]]]
-                  Beta = min((Beta, Current_Score))
-                  Board[i[0]][i[1]] = ' '
-                  if Beta <= Alpha:
-                    break
-        return Optimal_score, Move[0], Move[1]
-
-def GetAvailableMoves(Size, HeatMap):
-        AvailableMoves = []
-        print(HeatMap)
+# Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
+def Ai_Move(board, depth, alpha, beta, maximizingPlayer):
+    valid_locations = GetAvailableMoves(Size)
+    is_terminal = Win_Check(Board, Size) or Check_Draw(Board, Size)
+ 
+    # Base case: If the depth is zero or the game is over, return the current board's score.
+    if depth == 0 or is_terminal:
+        if is_terminal:
+            if Win_Check(Board, Size):
+                return (None, float('inf') * (1 if maximizingPlayer else -1))
+            else: # Game is over, no more valid moves
+                return (None, 0)
+        else: # Depth is zero
+            return (None, Score_calc(Turn) - Score_calc(Turn + 1))
+            #return (None, score_position(board, AI_PIECE)) #fix score
+    
+    player_symbol = "X" if Turn%2 != 0 else 'O'
+    # Maximize the score if it's the maximizing player's turn
+    if maximizingPlayer:
+        value = float('-inf')
+        Best_move = valid_locations[0]
+        for move in valid_locations:
+            Board[move[0]][move[1]] = player_symbol
+            new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
+            Board[move[0]][move[1]] = ' '
+ 
+            # Update the best move and alpha value.
+            if new_score > value:
+                value = new_score
+                Best_move = Move
+            alpha = max(alpha, value)
+ 
+            # Prune the search if the alpha value is greater than or equal to beta.
+            if alpha >= beta:
+                break
+        return Best_move, value
+ 
+    else: # Minimize the score if it's the minimizing player's turn.
+        value = float('inf')
+        Best_move = valid_locations[0]
+        for move in valid_locations:
+            Board[move[0]][move[1]] = player_symbol
+            new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
+            Board[move[0]][move[1]] = ' '
+ 
+            # Update the best move and alpha value.
+            if new_score > value:
+                value = new_score
+                Best_move = Move
+            alpha = max(alpha, value)
+ 
+            # Prune the search if the alpha value is greater than or equal to beta.
+            if alpha >= beta:
+                break
+        return Best_move, value
+    
+def GetAvailableMoves(Size):
+        Moves = []
         for i in range (Size):
             for j in range (Size):
-                if int(HeatMap[i][j]) >= 1:
-                    append = [i, j, int(HeatMap[i][j])]
-                    AvailableMoves.append(append)
-        AvailableMoves.sort(reverse = True, key = get_Heat)
-        return AvailableMoves
+                if Board[i][j] == ' ':
+                    Moves.append([i, j])
+        return Moves
 
 while True:
     if not Win_Check(Board, Size) or Check_Draw(Board, Size):
       if Turn % 2 == 0:
           Board, Turn, Move = Player_Turn(Board, Turn, Move)
-          HeatMap = Update_HeatMap(HeatMap, Move, HeatTruth)
+          #HeatMap = Update_HeatMap(HeatMap, Move, HeatTruth)
       else:
           Depth = Reset_Depth()
-          Max_score, x, y = Ai_Move(Board, HeatMap, Turn, Size, Depth, Alpha, Beta, Optimal_score, Maximising)
+          Max_score, x, y = Ai_Move(Board, Depth, Alpha, Beta, Maximising)
           print(Max_score)
           Max_score = float('-inf')
           Board[x][y] = 'X'
-          HeatMap = Reset_HeatMap(HeatMap)
-          Update_HeatMap(HeatMap, [x, y], HeatTruth)
+          #HeatMap = Reset_HeatMap(HeatMap)
+          #Update_HeatMap(HeatMap, [x, y], HeatTruth)
           print(Board)
           Turn += 1
     else:
