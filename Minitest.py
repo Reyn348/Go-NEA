@@ -19,7 +19,7 @@ for Count1 in range (Size):
 for Count1 in range (Size):
         Boardcount = []
         for Count2 in range (Size):
-            Score = #add calc
+            Score = 0#add calc
             Boardcount.append(BoardPosition)
         BoardScore.append(BoardRow)
 
