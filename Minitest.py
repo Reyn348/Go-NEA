@@ -4,18 +4,9 @@ from Globals import *
 sys.setrecursionlimit(1000000)
 
 Board = []
-HeatMap = []
-HeatTruth = []
-Move = [0, 0, 0]
-Depth = 0
+BoardScore = []
 Size = 15
 Turn = 0
-Depth = 20
-Maximising = True
-Optimal_score = 0
-Alpha = 0
-Beta = 0
-valid_move = False
 
 for Count1 in range (Size):
         BoardRow = []
@@ -23,20 +14,14 @@ for Count1 in range (Size):
             BoardPosition = ' '
             BoardRow.append(BoardPosition)
         Board.append(BoardRow)
-
+#abs(size -(x*y)) - danny b
+#or hard code it
 for Count1 in range (Size):
-        HeatRow = []
+        Boardcount = []
         for Count2 in range (Size):
-            HeatValue = 0
-            HeatRow.append(HeatValue)
-        HeatMap.append(HeatRow)
-
-for Count1 in range (Size):
-        TruthRow = []
-        for Count2 in range (Size):
-            HeatBool = False
-            TruthRow.append(HeatBool)
-        HeatTruth.append(TruthRow)
+            Score = #add calc
+            Boardcount.append(BoardPosition)
+        BoardScore.append(BoardRow)
 
 def Win_Check(Board, Size):
       for x in range (2, Size-2):
@@ -57,81 +42,21 @@ def Check_Draw(Board, Size):
             return False
       return True
 
-def Player_Turn(Board, Turn, Move):
+def Player_Turn(Board, Turn):
   valid_move = False
   while valid_move == False:
     x = int(input('X: '))
     y = int(input('Y: '))
-    Move[0] = x
-    Move[1] = y
-    if Board[y][x] == ' ':
-      Board [y][x] = 'O'
+    if Board[x][y] == ' ':
+      Board [x][y] = 'O'
       valid_move = True
     Turn += 1
-  return Board, Turn, Move
+  return Board, Turn
 
-'''def Update_HeatMap(HeatMap, Move, HeatTruth):
-    Move_X = int(Move[0])
-    Move_Y = int(Move[1])
-    HeatMap[Move_X][Move_Y] = -1
-    for k in range (2):
-          X_pos = min((14, Move_X + k))
-          X_neg = max((0, Move_X - k))
-          print(X_neg)
-          Y_pos = min((14, Move_Y + k))
-          Y_neg = max((0, Move_Y - k))
-          if HeatMap[X_pos][Y_pos] > -1 and not HeatTruth[X_pos][Y_pos]: HeatMap[X_pos][Y_pos] += 1; HeatTruth[X_pos][Y_pos] = True
-          if HeatMap[X_pos][Y_neg] > -1 and not HeatTruth[X_pos][Y_neg]: HeatMap[X_pos][Y_neg] += 1; HeatTruth[X_pos][Y_neg] = True
-          if HeatMap[X_neg][Y_pos] > -1 and not HeatTruth[X_neg][Y_pos]: HeatMap[X_neg][Y_pos] += 1; HeatTruth[X_neg][Y_pos] = True
-          if HeatMap[X_neg][Y_neg] > -1 and not HeatTruth[X_neg][Y_neg]: HeatMap[X_neg][Y_neg] += 1; HeatTruth[X_neg][Y_neg] = True
-    HeatTruth = Reset_HeatTruth(HeatTruth)
-    return HeatMap
-
-def Reset_HeatTruth(HeatTruth):
-    for i in range (len(HeatTruth)):
-        for j in range (len(HeatTruth)):
-            HeatTruth[i][j] = False
-    return HeatTruth
-
-def Reset_HeatMap(HeatMap):
-    for i in range (len(HeatMap)):
-        for j in range (len(HeatMap)):
-            HeatMap[i][j] = 0
-    return HeatMap
-
-def get_Heat(list):
-  return list[2]
-'''
-########
-'''def Score_calc(piece, Maximising):
-      best = 0
-      New_x = Move[0]
-      New_y = Move[1]
-      search = 4
-      for New_x in range (Size):
-          for New_y in range (Size):
-              hcount = vcount = ldcount = rdcount = 0
-              if (Size - New_x) <= 4 or (Size - New_y) <= 4:
-                 search = min((Size - New_x -1, Size - New_y - 1))
-              for i in range (search):
-                if Board[New_x + i][New_y] == piece:
-                  hcount += 1
-                if Board[New_x][New_y + i] == piece:
-                  vcount += 1
-                if Board[New_x + i][New_y + i] == piece:
-                    rdcount += 1
-                if Board[New_x + i][New_y - i] == piece:
-                    ldcount += 1
-                if Board[New_x - i][New_y + i] == piece:
-                    ldcount += 1
-                if Board[New_x - i][New_y - i] == piece:
-                    rdcount += 1
-                best = max((hcount, vcount, ldcount, rdcount, best))
-      if Maximising:
-        return best
-      else:
-        #best *= -1
-        return best'''
+#score calc ideas:
+#score positions and multiply by lines made?
+#+1 if blocking (prioritise defence)
+#make a definition of open four etc that should count to inf or whatever
 
 def Score_calc(Turn):
     piece = "X" if Turn%2 != 0 else 'O'
@@ -167,12 +92,9 @@ def Score_calc(Turn):
                 best = max((hcount, vcount, ldcount, rdcount, best))
     return best
 
-def Reset_Depth():
-      return 20
-
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
-def Ai_Move(board, depth, alpha, beta, maximizingPlayer):
-    valid_locations = GetAvailableMoves(Size)
+def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
+    valid_locations = GetAvailableMoves(Board, Size)
     is_terminal = Win_Check(Board, Size) or Check_Draw(Board, Size)
  
     # Base case: If the depth is zero or the game is over, return the current board's score.
@@ -186,20 +108,20 @@ def Ai_Move(board, depth, alpha, beta, maximizingPlayer):
             return (None, Score_calc(Turn) - Score_calc(Turn + 1))
             #return (None, score_position(board, AI_PIECE)) #fix score
     
-    player_symbol = "X" if Turn%2 != 0 else 'O'
+    player_symbol = 'X' if Turn %2 != 0 else 'O'
     # Maximize the score if it's the maximizing player's turn
     if maximizingPlayer:
         value = float('-inf')
         Best_move = valid_locations[0]
         for move in valid_locations:
-            Board[move[0]][move[1]] = player_symbol
+            if move == [3, 2]: raise Exception
             new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
             Board[move[0]][move[1]] = ' '
  
             # Update the best move and alpha value.
             if new_score > value:
                 value = new_score
-                Best_move = Move
+                Best_move = move
             alpha = max(alpha, value)
  
             # Prune the search if the alpha value is greater than or equal to beta.
@@ -211,22 +133,24 @@ def Ai_Move(board, depth, alpha, beta, maximizingPlayer):
         value = float('inf')
         Best_move = valid_locations[0]
         for move in valid_locations:
-            Board[move[0]][move[1]] = player_symbol
+            if move == [3, 2]: raise Exception
+            Board[move[0]][move[1]] = 'O'
+            
             new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
             Board[move[0]][move[1]] = ' '
  
             # Update the best move and alpha value.
-            if new_score > value:
+            if new_score < value:
                 value = new_score
-                Best_move = Move
-            alpha = max(alpha, value)
+                Best_move = move
+            beta = min(beta, value)
  
             # Prune the search if the alpha value is greater than or equal to beta.
             if alpha >= beta:
                 break
         return Best_move, value
     
-def GetAvailableMoves(Size):
+def GetAvailableMoves(Board, Size):
         Moves = []
         for i in range (Size):
             for j in range (Size):
@@ -237,17 +161,10 @@ def GetAvailableMoves(Size):
 while True:
     if not Win_Check(Board, Size) or Check_Draw(Board, Size):
       if Turn % 2 == 0:
-          Board, Turn, Move = Player_Turn(Board, Turn, Move)
-          #HeatMap = Update_HeatMap(HeatMap, Move, HeatTruth)
+          Board, Turn = Player_Turn(Board, Turn)
       else:
-          Depth = Reset_Depth()
-          Max_score, x, y = Ai_Move(Board, Depth, Alpha, Beta, Maximising)
-          print(Max_score)
-          Max_score = float('-inf')
-          Board[x][y] = 'X'
-          #HeatMap = Reset_HeatMap(HeatMap)
-          #Update_HeatMap(HeatMap, [x, y], HeatTruth)
-          print(Board)
+          Best_move, Max_score  = Ai_Move(Board, 2, float('-inf'), float('inf'), True)
+          Board[Best_move[0]][Best_move[1]] = 'X'
           Turn += 1
     else:
        print('it ended btw')
