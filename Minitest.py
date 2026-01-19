@@ -19,17 +19,17 @@ for Count1 in range (Size):
 if Size == 15:
     BoardScore = [['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'], 
                  ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'], 
-                 ['0', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '5', '5', '5', '5', '5', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '5', '6', '6', '6', '5', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '5', '6', '7', '6', '5', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '5', '6', '6', '6', '5', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '5', '5', '5', '5', '5', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1', '0'], 
-                 ['0', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1', '0'], 
+                 ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '5', '5', '5', '5', '5', '5', '5', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '5', '6', '6', '6', '6', '6', '5', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '5', '6', '7', '7', '7', '6', '5', '4', '3', '2', '1'],
+                 ['1', '2', '3', '4', '5', '6', '7', '8', '7', '6', '5', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '5', '6', '7', '7', '7', '6', '5', '4', '3', '2', '1'],
+                 ['1', '2', '3', '4', '5', '6', '6', '6', '6', '6', '5', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '5', '5', '5', '5', '5', '5', '5', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1'], 
+                 ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'], 
                  ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'], 
                  ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']]
 elif Size == 19:
@@ -52,10 +52,6 @@ elif Size == 19:
                 ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'],
                 ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'],
                 ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],]
-list = []
-for i in range (7):
-    list.append('7')
-print(list)
 
 def Win_Check(Board, Size):
       for x in range (2, Size-2):
@@ -87,48 +83,98 @@ def Player_Turn(Board, Turn):
     Turn += 1
   return Board, Turn
 
+#reintroduce heatmap perchance to make it all work faster + to centre moves on already existing pieces
+'''def Update_HeatMap(HeatMap, Move, HeatTruth):
+    Move_X = int(Move[0])
+    Move_Y = int(Move[1])
+    HeatMap[Move_X][Move_Y] = -1
+    for k in range (2):
+          X_pos = min((14, Move_X + k))
+          X_neg = max((0, Move_X - k))
+          print(X_neg)
+          Y_pos = min((14, Move_Y + k))
+          Y_neg = max((0, Move_Y - k))
+          if HeatMap[X_pos][Y_pos] > -1 and not HeatTruth[X_pos][Y_pos]: HeatMap[X_pos][Y_pos] += 1; HeatTruth[X_pos][Y_pos] = True
+          if HeatMap[X_pos][Y_neg] > -1 and not HeatTruth[X_pos][Y_neg]: HeatMap[X_pos][Y_neg] += 1; HeatTruth[X_pos][Y_neg] = True
+          if HeatMap[X_neg][Y_pos] > -1 and not HeatTruth[X_neg][Y_pos]: HeatMap[X_neg][Y_pos] += 1; HeatTruth[X_neg][Y_pos] = True
+          if HeatMap[X_neg][Y_neg] > -1 and not HeatTruth[X_neg][Y_neg]: HeatMap[X_neg][Y_neg] += 1; HeatTruth[X_neg][Y_neg] = True
+    HeatTruth = Reset_HeatTruth(HeatTruth)
+    return HeatMap
+ 
+def Reset_HeatTruth(HeatTruth):
+    for i in range (len(HeatTruth)):
+        for j in range (len(HeatTruth)):
+            HeatTruth[i][j] = False
+    return HeatTruth
+ 
+def Reset_HeatMap(HeatMap):
+    for i in range (len(HeatMap)):
+        for j in range (len(HeatMap)):
+            HeatMap[i][j] = 0
+    return HeatMap
+ 
+def get_Heat(list):
+  return list[2]
+'''
+
 #score calc ideas:
 #score positions and multiply by lines made?
 #+1 if blocking (prioritise defence)
 #make a definition of open four etc that should count to inf or whatever
 
 def Score_calc(Turn):
-    piece = "X" if Turn%2 != 0 else 'O'
+    Piece = 'X' if Turn % 2 != 0 else 'O'
+    Opponent = 'O' if Turn % 2 != 0 else 'X'
     best = 0
     for New_x in range (Size):
           for New_y in range (Size):
               hcount = vcount = ldcount = rdcount = 0
+              hscore = vscore = ldscore = rdscore = 0
               for i in range (4):
                 try:
-                    if Board[New_x + i][New_y] == piece:
-                        hcount += BoardScore[New_x + i][New_y]*(hcount+1)
+                    if Board[New_x + i][New_y] == Piece:
+                        hcount += 1
+                        hscore += int(BoardScore[New_x + i][New_y])*(hcount+1)
+                    elif Board[New_x + i][New_y] == Opponent:
+                        hscore += 1
                 except: pass
                 try:
-                    if Board[New_x][New_y + i] == piece:
+                    if Board[New_x][New_y + i] == Piece:
                         vcount += 1
-                        hcount += BoardScore[New_x][New_y +i]*(hcount+1)
+                        vscore += int(BoardScore[New_x][New_y +i])*(vcount+1)
+                    elif Board[New_x][New_y + i] == Opponent:
+                        vscore += 1
                 except: pass
                 try:
-                    if Board[New_x + i][New_y + i] == piece:
+                    if Board[New_x + i][New_y + i] == Piece:
                         rdcount += 1
-                        hcount += BoardScore[New_x + i][New_y + i]*(hcount+1)
+                        rdscore += int(BoardScore[New_x + i][New_y + i])*(rdcount+1)
+                    elif Board[New_x + i][New_y + i] == Opponent:
+                        rdscore += 1
                 except: pass
                 try:
-                    if Board[New_x - i][New_y + 1] == piece:
+                    if Board[New_x - i][New_y + i] == Piece:
                         ldcount += 1
-                        hcount += BoardScore[New_x - i][New_y + i]*(hcount+1)
+                        ldscore += int(BoardScore[New_x - i][New_y + i])*(ldcount+1)
+                    elif Board[New_x - i][New_y + i] == Opponent:
+                        ldscore += 1
                 except: pass
                 try:
-                    if Board[New_x + i][New_y - 1] == piece:
+                    if Board[New_x + i][New_y - i] == Piece:
                         ldcount += 1
-                        hcount += BoardScore[New_x + i][New_y - i]*(hcount+1)
+                        ldscore += int(BoardScore[New_x + i][New_y - i])*(ldcount+1)
+                    elif Board[New_x + i][New_y - i] == Opponent:
+                        ldscore += 1
                 except: pass
                 try:
-                    if Board[New_x - i][New_y - i] == piece:
+                    if Board[New_x - i][New_y - i] == Piece:
                         rdcount += 1
-                        hcount += BoardScore[New_x - i][New_y - i]*(hcount+1)
+                        rdscore += int(BoardScore[New_x - i][New_y - i])*(rdcount+1)
+                    elif Board[New_x - i][New_y - 1] == Opponent:
+                        rdscore += 1
                 except: pass
-                best = max((hcount, vcount, ldcount, rdcount, best))
+                print(hscore, vscore, ldscore, rdscore, best)
+                best = max((hscore, vscore, ldscore, rdscore, best))
     return best
 
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
