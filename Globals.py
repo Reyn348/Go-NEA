@@ -1,16 +1,16 @@
-import pygame
-from pygame.locals import *
+#import pygame
+#from pygame.locals import *
 
-pygame.init()
+'''pygame.init()
 pygame.font.init()
 pygame.display.set_caption('Gomoku')
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
-
-Time = pygame.time.get_ticks()
+'''
+#Time = pygame.time.get_ticks()
 
 #allow for different cursors
-ibeam = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_IBEAM)
+#ibeam = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_IBEAM)
 
 #screen globals
 SIZE = (1440, 900)
@@ -19,8 +19,8 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 #create screen
-screen = pygame.display.set_mode(SIZE)
-screen.fill(SCREEN_COLOUR)
+#screen = pygame.display.set_mode(SIZE)
+#screen.fill(SCREEN_COLOUR)
 
 #game globals
 Difficulty = ''
@@ -29,7 +29,7 @@ Board = []
 Temp_Board = []
 Turn_count = 0
 Turn = 0
-Time = pygame.time.get_ticks()
+#Time = pygame.time.get_ticks()
 Seconds = 0
 Minutes = 0
 Depth = 0
@@ -44,12 +44,12 @@ P1COLOUR = (66, 58, 214)
 P2COLOUR = (66, 143, 78)
 
 #allow for different cursors
-ibeam = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_IBEAM)
+#ibeam = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_IBEAM)
 
 #create screen
-screen = pygame.display.set_mode(SIZE)
-screen.fill(SCREEN_COLOUR)
-
+#screen = pygame.display.set_mode(SIZE)
+#screen.fill(SCREEN_COLOUR)
+'''
 #lists for drawing GUI
 MAIN_MENU_RECT = [pygame.Rect(0, 0, 400, 100),
                   pygame.Rect(520, 100, 400, 100),
@@ -96,4 +96,4 @@ FONT65 = pygame.font.SysFont('freesanbold.ttf', 65)
 FONT55 = pygame.font.SysFont('freesanbold.ttf', 55)
 FONT53 = pygame.font.SysFont('freesanbold.ttf', 53)
 FONT50 = pygame.font.SysFont('freesanbold.ttf', 50)
-FONT40 = pygame.font.SysFont('freesanbold.ttf', 40)
+FONT40 = pygame.font.SysFont('freesanbold.ttf', 40)'''

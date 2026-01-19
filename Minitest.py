@@ -1,5 +1,6 @@
 import sys
 from Globals import *
+import math
 
 sys.setrecursionlimit(1000000)
 
@@ -14,15 +15,33 @@ for Count1 in range (Size):
             BoardPosition = ' '
             BoardRow.append(BoardPosition)
         Board.append(BoardRow)
+
 #abs(size -(x*y)) - danny b
 #or hard code it
-for Count1 in range (Size):
-        Boardcount = []
-        for Count2 in range (Size):
-            Score = 0#add calc
-            Boardcount.append(BoardPosition)
-        BoardScore.append(BoardRow)
 
+for x in range (Size):
+        Boardcount = []
+        for y in range (Size):
+            Score = abs(((Size-1) -(x*y))%(Size-1))
+            Boardcount.append(str(Score))
+        BoardScore.append(Boardcount)
+print(BoardScore)
+if Size == 15:
+    BoardScore = [['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'], 
+    ['0', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1', '0'], 
+    ['0', '1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '0', '0', '0', '0', '0', '0', '0', '3', '2', '1', '0'], 
+    ['0', '1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1', '0'], 
+    ['0', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1', '0'], 
+    ['0', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '0'], 
+    ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']]
 def Win_Check(Board, Size):
       for x in range (2, Size-2):
         for y in range (2, Size-2):
@@ -161,6 +180,7 @@ def GetAvailableMoves(Board, Size):
 while True:
     if not Win_Check(Board, Size) or Check_Draw(Board, Size):
       if Turn % 2 == 0:
+          print(Board)
           Board, Turn = Player_Turn(Board, Turn)
       else:
           Best_move, Max_score  = Ai_Move(Board, 2, float('-inf'), float('inf'), True)
