@@ -39,6 +39,28 @@ def Reset_HeatMap(HeatMap):
 def get_Heat(list):
   return list[2]
  
+#current uses coutning and maths
+#what if I make a way of checking open four/three etc etc and that returns +5billion
+#current counting system can stay for anything less important deirectly searched for
+
+def Open_four_search(x, y, Piece, Opponent):
+   #horizontal
+   if Board[x-1][y] == ' ' and (Board[x][y] == Board[x+1][y] == Board[x+2][y] == Board[x+3][y] == Piece) and Board[x-+4][y] == ' ':
+      return True, float('inf')
+   elif Board[x-1][y] == ' ' and (Board[x][y] == Board[x+1][y] == Board[x+2][y] == Board[x+3][y] == Opponent) and Board[x-+4][y] == ' ':
+      return True, float('-inf')
+   #vertical
+   if Board[x][y-1] == ' ' and (Board[x][y] == Board[x][y+1] == Board[x][y+2] == Board[x][y+3] == Piece) and Board[x][y+4] == ' ':
+      return True, float('inf')
+   elif Board[x][y-1] == ' ' and (Board[x][y] == Board[x][y+1] == Board[x][y+2] == Board[x][y+3] == Opponent) and Board[x][y+4] == ' ':
+      return True, float('inf')
+   #left diagonal
+   if Board[x-1][y-1] == ' ' and (Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Board[x+3][y+3] == Piece) and Board[x+4][y+4] == ' ':
+      return True, float('inf')
+   elif Board[x-1][y-1] == ' ' and (Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Board[x+3][y+3] == Opponent) and Board[x+4][y+4] == ' ':
+      return True, float('-inf')
+   #right diagonal
+   if Board[x+1][y-1] == ' ' and () and 
 def Score_calc(Turn):
     Piece = 'O' if Turn == 2 else 'X'
     Opponent = 'X' if Turn == 2 else 'O'
