@@ -90,6 +90,8 @@ def Score_calc(Turn):
                     elif Board[New_x - i][New_y - 1] == Opponent:
                         rdscore += 1
                 except: pass
+                if hcount or vcount or rdcount or ldcount == 5:
+                  best = float('inf')
                 best = max((hscore, vscore, ldscore, rdscore, best))
     return best
 
@@ -115,6 +117,7 @@ def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
         Best_move = [-1, -1]
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
+            
             new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
             Board[move[0]][move[1]] = ' '
  
@@ -149,14 +152,13 @@ def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
         return Best_move, value
 
 def GetAvailableMoves(Board, Size):
-  Moves = []
+  AvailableMoves = []
   for i in range (Size):
     for j in range (Size):
       if HeatMap[i][j] > 0:
-        if Board[i][j] == ' ':
-          Moves.append([i, j, HeatMap[i][j]])
-  Moves.sort(reverse = True, key = get_Heat)
-  return Moves
+        AvailableMoves.append([i, j, HeatMap[i][j]])
+  AvailableMoves.sort(reverse=True, key=get_Heat)
+  return AvailableMoves
 
 class TextInput(pygame.sprite.Sprite):
     def __init__(self, x, y, width=100, height=50, color= BLACK, bgcolor=WHITE, selectedColor=(190,195,198)):
@@ -217,7 +219,7 @@ class basePlayer(ABC):
    def __init__(self):
       pass
    
-   def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU):
+   def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth):
       Temp_Board = numpy.copy(Board) #just for the undo function
       Updated = False
       if not (CPU and Turn == 2):
@@ -252,35 +254,36 @@ class basePlayer(ABC):
         else:
             Board[XIndex][YIndex] = 'O'  
         Game.Update_Board(Turn, XIndex, YIndex)
+        HeatMap = Update_HeatMap(HeatMap, [XIndex, YIndex], HeatTruth)
         Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
         Updated = True 
-      return Board, Turn, Turn_count, Temp_Board, Updated
+      return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap
    
-   def Move_calc(self, Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier):
+   def Move_calc(self, Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth):
         Updated = False
         if Size == 15:
             x = (mouse_pos[0]-610)
             y = (mouse_pos[1]-313)
             if(x % 35 <= 10 or x % 35 >= 25) and (y % 35 <= 10 or y % 35 >= 25) and (-10 <= x <= 500 and -10 <= y <= 500):
-                Board, Turn, Turn_count, Temp_Board, Updated = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU)
+                Board, Turn, Turn_count, Temp_Board, Updated, HeatMap = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
                 Line_Check = Game.Win_Check(Board, Size)
                 if Line_Check:
                    X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn)
-                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated
+                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
             else:
-               return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated
+               return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
           
         elif Size == 19:
             x = (mouse_pos[0]-580)
             y = (mouse_pos[1]-290)
             if (x % 30 <= 10 or x % 30 >= 20) and (y % 30 <= 10 or y % 30 >= 20) and (-10 <= x <= 600 and -10<= y <+ 600):
-                Board, Turn, Turn_count, Temp_Board, Updated = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU)
+                Board, Turn, Turn_count, Temp_Board, Updated, HeatMap = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
                 Line_Check = Game.Win_Check(Board, Size)
                 if Line_Check:
                    X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn)
-                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated
+                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
             else:
-               return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated
+               return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
    
 class humanPlayer(basePlayer):
   def __init__(self):
@@ -555,7 +558,6 @@ class Drawing():
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
   def Board_Size():
-      Game.Player_Turn(Turn, Turn_count)
       X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program()
       for current in TextInputGroup:
           TextInputGroup.remove(current)
@@ -701,7 +703,7 @@ class Game():
     def __init__(self):
        pass
 
-    def Draw_Next(Next, Difficulty, Size, Temp_Board, Board, Turn, CPU):
+    def Draw_Next(Next, Difficulty, Size, Temp_Board, Board, Turn, Turn_count, CPU):
       if Next == 'CPU_diff':
         CPU = True
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.CPU_Diff()
@@ -710,6 +712,7 @@ class Game():
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.P1_Name()
         
       elif Next == '15' or Next == '19':
+        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Next)
         
       elif Next == 'MENU':
@@ -728,7 +731,7 @@ class Game():
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
         
-      return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Difficulty, Size, Board, Turn, CPU
+      return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Difficulty, Size, Board, Turn, Turn_count, CPU
       
     def get_BoardScore(Size):
       if Size == 15:
@@ -813,8 +816,8 @@ class Game():
           Turn = 1
         else:
             Turn = 2
-      if Turn_count == 0 and CPU:
-           Turn = 1
+      elif Turn_count == 0 and CPU:
+          Turn = 1
       else:
         if Turn == 1:
             Turn = 2
@@ -871,8 +874,8 @@ while True:
     mouse_pos = pygame.mouse.get_pos()
     if (AI_turn and Updated) == True:
               Updated = False
-              Best_move, Max_score  = Ai_Move(Board, 2, float('-inf'), float('inf'), True)
-              Board, Turn, Turn_count, Temp_Board, Updated = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU)
+              Best_move, Max_score  = Ai_Move(Board, 3, float('-inf'), float('inf'), True)
+              Board, Turn, Turn_count, Temp_Board, Updated, HeatMap = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth)
               Board[Best_move[0]][Best_move[1]] = 'O'
               AI_turn = False
 
@@ -931,7 +934,7 @@ while True:
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
                         break
                      else:
-                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Difficulty, Size, Board, Turn, CPU = Game.Draw_Next(Next, Difficulty, Size, Temp_Board, Board, Turn, CPU)
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Difficulty, Size, Board, Turn, Turn_count, CPU = Game.Draw_Next(Next, Difficulty, Size, Temp_Board, Board, Turn, Turn_count, CPU)
                         break
                      
             if Line_Check:
@@ -939,16 +942,13 @@ while True:
 
             elif not Line_Check:
               Updated = False
-              print('hi')
-              print(Identifier)
-              print(Turn)
               if Identifier == 'GAME' and Turn != 2:
-                X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated = Player_1.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier)
+                X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap = Player_1.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth)
 
                 if not Line_Check: AI_turn = True
 
               elif Identifier == 'GAME' and Turn == 2 and not CPU:
-                X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated = Player_2.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier)
+                X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap = Player_2.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth)
                 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
