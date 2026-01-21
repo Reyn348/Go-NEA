@@ -3,7 +3,6 @@ import sys
 import math
 import random
 import numpy
-from numpy import *
 from abc import ABC
 
 sys.setrecursionlimit(100000)
@@ -39,32 +38,67 @@ def Reset_HeatMap(HeatMap):
 def get_Heat(list):
   return list[2]
  
-#current uses coutning and maths
+#current uses counting and maths
 #what if I make a way of checking open four/three etc etc and that returns +5billion
-#current counting system can stay for anything less important deirectly searched for
+#current counting system can stay for anything less important directly searched for
 
-def Open_four_search(x, y, Piece, Opponent):
-   #horizontal
-   if Board[x-1][y] == ' ' and (Board[x][y] == Board[x+1][y] == Board[x+2][y] == Board[x+3][y] == Piece) and Board[x-+4][y] == ' ':
-      return True, float('inf')
-   elif Board[x-1][y] == ' ' and (Board[x][y] == Board[x+1][y] == Board[x+2][y] == Board[x+3][y] == Opponent) and Board[x-+4][y] == ' ':
-      return True, float('-inf')
-   #vertical
-   if Board[x][y-1] == ' ' and (Board[x][y] == Board[x][y+1] == Board[x][y+2] == Board[x][y+3] == Piece) and Board[x][y+4] == ' ':
-      return True, float('inf')
-   elif Board[x][y-1] == ' ' and (Board[x][y] == Board[x][y+1] == Board[x][y+2] == Board[x][y+3] == Opponent) and Board[x][y+4] == ' ':
-      return True, float('inf')
-   #left diagonal
-   if Board[x-1][y-1] == ' ' and (Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Board[x+3][y+3] == Piece) and Board[x+4][y+4] == ' ':
-      return True, float('inf')
-   elif Board[x-1][y-1] == ' ' and (Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Board[x+3][y+3] == Opponent) and Board[x+4][y+4] == ' ':
-      return True, float('-inf')
-   #right diagonal
-   if Board[x+1][y-1] == ' ' and () and 
+def Open_row_search(x, y, Piece):
+    Three = Open_Three = Four = Open_Four = False
+    #horizontal
+    if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
+        Three = True
+        if Board[x-1][y] == Board[x+3][y] == ' ':
+            Open_Three = True
+        elif Board[x+3][y] == Piece:
+            Four = True
+            if Board[x-1][y] == Board[x+4][y] == ' ':
+                Open_Four = True
+    #vertical
+    if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
+        Three = True
+        if Board[x][y-1] == Board[x][y+3] == ' ':
+            Open_Three = True
+        elif Board[x][y+3] == Piece:
+            Four = True
+            if Board[x][y-1] == Board[x][y+4] == ' ':
+                Open_Four = True
+    #left diagonal
+    if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
+        Three = True
+        if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
+            Open_Three = True
+        elif Board[x+3][y+3] == Piece:
+            Four = True
+            if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
+                Open_Four = True
+    #right diagonal
+    if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
+        Three = True
+        if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
+            Open_Three = True
+        elif Board[x-3][y+3] == Piece:
+            Four = True
+            if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
+                Open_Four = True
+    if Open_Four:
+        return float('inf')
+    if Four:
+       return 1000000000
+    if Open_Three:
+       return 10000000
+    if Three:
+       return 100000
+    else:
+       return 0
+
 def Score_calc(Turn):
     Piece = 'O' if Turn == 2 else 'X'
     Opponent = 'X' if Turn == 2 else 'O'
     best = 0
+    for x in range (1, Size-4):
+       for y in range (1, Size-4):
+          Open = Open_row_search(x, y, Piece)
+          Best = max((Open, Best))
     for New_x in range (Size):
           for New_y in range (Size):
               hcount = vcount = ldcount = rdcount = 0
