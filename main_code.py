@@ -98,7 +98,7 @@ def Score_calc(Turn):
     for x in range (1, Size-4):
        for y in range (1, Size-4):
           Open = Open_row_search(x, y, Piece)
-          Best = max((Open, Best))
+          best = max((Open, best))
     for New_x in range (Size):
           for New_y in range (Size):
               hcount = vcount = ldcount = rdcount = 0
@@ -147,7 +147,7 @@ def Score_calc(Turn):
                         rdscore += 1
                 except: pass
                 if hcount or vcount or rdcount or ldcount == 5:
-                  best = float('inf')
+                  best = 100000000000
                 best = max((hscore, vscore, ldscore, rdscore, best))
     return best
 
