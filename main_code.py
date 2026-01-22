@@ -1,7 +1,7 @@
 from Globals import *
 import sys
-import math
 import random
+import math
 import numpy
 from abc import ABC
 
@@ -53,6 +53,7 @@ def Open_row_search(x, y, Piece):
             Four = True
             if Board[x-1][y] == Board[x+4][y] == ' ':
                 Open_Four = True
+
     #vertical
     if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
         Three = True
@@ -62,6 +63,7 @@ def Open_row_search(x, y, Piece):
             Four = True
             if Board[x][y-1] == Board[x][y+4] == ' ':
                 Open_Four = True
+
     #left diagonal
     if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
         Three = True
@@ -71,6 +73,7 @@ def Open_row_search(x, y, Piece):
             Four = True
             if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
                 Open_Four = True
+
     #right diagonal
     if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
         Three = True
@@ -80,8 +83,9 @@ def Open_row_search(x, y, Piece):
             Four = True
             if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
                 Open_Four = True
+
     if Open_Four:
-        return float('inf')
+        return 10000000000
     if Four:
        return 1000000000
     if Open_Three:
@@ -153,9 +157,9 @@ def Score_calc(Turn):
 
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
 def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
-    valid_locations = GetAvailableMoves(Board, Size)
+    valid_locations = GetAvailableMoves(Size)
     is_terminal = Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size)
- 
+
     # Base case: If the depth is zero or the game is over, return the current board's score.
     if depth == 0 or is_terminal:
         if is_terminal:
@@ -207,7 +211,7 @@ def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
                 break
         return Best_move, value
 
-def GetAvailableMoves(Board, Size):
+def GetAvailableMoves(Size):
   AvailableMoves = []
   for i in range (Size):
     for j in range (Size):
@@ -219,7 +223,7 @@ def GetAvailableMoves(Board, Size):
 class TextInput(pygame.sprite.Sprite):
     def __init__(self, x, y, width=100, height=50, color= BLACK, bgcolor=WHITE, selectedColor=(190,195,198)):
         super().__init__()
-        self.text_value = ""
+        self.text_value = ''
         self.isSelected = False
         self.color = color
         self.bgcolor = bgcolor
@@ -346,26 +350,6 @@ class humanPlayer(basePlayer):
       super().__init__()
       pass
   
-class randomPlayer(basePlayer):
-  def __init__(self):
-      super().__init__()
-      pass
-  
-  def move(self, Turn, Turn_count, Board, Temp_Board):
-      validmove=False
-      while not validmove:
-        XIndex = random.randint(0,14)
-        YIndex = random.randint(0,14)
-        if Board[XIndex][YIndex] == ' ':
-          validmove = True
-          Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
-          if Turn == 1:
-              Board[XIndex][YIndex] = 'X'
-          elif Turn == 2:
-              Board[XIndex][YIndex] = 'O'    
-      Game.Update_Board(Turn, XIndex, YIndex)
-      return Board, Turn, Turn_count, Temp_Board
-
 class computerPlayer(basePlayer):
   def __init__(self):
       super().__init__()
