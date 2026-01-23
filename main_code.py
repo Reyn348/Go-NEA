@@ -150,7 +150,7 @@ def Score_calc(Turn):
                     elif Board[New_x - i][New_y - 1] == Opponent:
                         rdscore += 1
                 except: pass
-                if hcount or vcount or rdcount or ldcount == 5:
+                if hcount == 5 or vcount == 5 or rdcount == 5 or ldcount == 5:
                   best = 100000000000
                 best = max((hscore, vscore, ldscore, rdscore, best))
     return best
@@ -158,19 +158,21 @@ def Score_calc(Turn):
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
 def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
     valid_locations = GetAvailableMoves(Size)
-    is_terminal = Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size)
+    if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): is_terminal = True
+    else: is_terminal = False
 
     # Base case: If the depth is zero or the game is over, return the current board's score.
     if depth == 0 or is_terminal:
         if is_terminal:
             if Game.Win_Check(Board, Size):
+                print(float('inf') * (1 if maximizingPlayer else -1))
                 return (None, float('inf') * (1 if maximizingPlayer else -1))
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
             return (None, Score_calc(Turn) - Score_calc(Turn + 1))
     
-    Player_symbol = 'X' if Turn %2 != 0 else 'O'
+    Player_symbol = 'X' if Turn %2 != 0 else 'O'\
     # Maximize the score if it's the maximizing player's turn
     if maximizingPlayer:
         value = float('-inf')
@@ -900,6 +902,7 @@ class Game():
           
           elif Board[x-2][y+2] == Board[x-1][y+1] == Board[x][y] == Board[x+1][y-1] == Board [x+2][y-2] != ' ':
             return True
+      return False
           
     def Check_Draw(Board, Size):
       for x in range (Size):
@@ -915,6 +918,7 @@ while True:
     if (AI_turn and Updated) == True:
               Updated = False
               Best_move, Max_score  = Ai_Move(Board, 3, float('-inf'), float('inf'), True)
+              print(Max_score)
               Board, Turn, Turn_count, Temp_Board, Updated, HeatMap = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth)
               Board[Best_move[0]][Best_move[1]] = 'O'
               AI_turn = False
