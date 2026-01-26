@@ -151,7 +151,7 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
-            return (None, Score_calc(maximisingPlayer) - Score_calc(not maximisingPlayer))
+            return (None, Score_calc(True) - Score_calc(False))
     
     Player_symbol = 'O' if maximisingPlayer else 'X'
     # Maximize the score if it's the maximizing player's turn
@@ -182,6 +182,9 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
         Best_move = [-1, -1]
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
+            if Game.Win_Check(Board, Size):
+              new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
+              Board[move[0]][move[1]] = ' '
             new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
             Board[move[0]][move[1]] = ' '
  
@@ -868,8 +871,8 @@ while True:
 
     for event in pygame.event.get():
         if event.type == pygame.quit:
-            sys.exit
             pygame.quit()
+            sys.exit
            
         if event.type == pygame.MOUSEBUTTONDOWN:
             for textinput in TextInputGroup:
@@ -921,9 +924,11 @@ while True:
                         Board = []
                         HeatMap = []
                         HeatTruth = []
+                        Turn_count = 0
                         if CPU:
                            AI_turn = False
                            Updated = False
+                        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program()
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
                         break
