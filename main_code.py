@@ -91,9 +91,9 @@ def Open_row_search(x, y, Piece):
     else:
        return 0
 
-def Score_calc(Turn):
-    Piece = 'O' if Turn == 2 else 'X'
-    Opponent = 'X' if Turn == 2 else 'O'
+def Score_calc(maximisingPlayer):
+    Piece = 'O' if maximisingPlayer else 'X'
+    Opponent = 'X' if maximisingPlayer else 'O'
     best = 0
     for x in range (1, Size-4):
        for y in range (1, Size-4):
@@ -119,24 +119,10 @@ def Score_calc(Turn):
                         vscore += 1
                 except: pass
                 try:
-                    if Board[New_x + i][New_y + i] == Piece:
-                        rdcount += 1
-                        rdscore += int(BoardScore[New_x + i][New_y + i])*(rdcount+1)
-                    elif Board[New_x + i][New_y + i] == Opponent:
-                        rdscore += 1
-                except: pass
-                try:
                     if Board[New_x - i][New_y + i] == Piece:
                         ldcount += 1
                         ldscore += int(BoardScore[New_x - i][New_y + i])*(ldcount+1)
                     elif Board[New_x - i][New_y + i] == Opponent:
-                        ldscore += 1
-                except: pass
-                try:
-                    if Board[New_x + i][New_y - i] == Piece:
-                        ldcount += 1
-                        ldscore += int(BoardScore[New_x + i][New_y - i])*(ldcount+1)
-                    elif Board[New_x + i][New_y - i] == Opponent:
                         ldscore += 1
                 except: pass
                 try:
@@ -146,36 +132,37 @@ def Score_calc(Turn):
                     elif Board[New_x - i][New_y - 1] == Opponent:
                         rdscore += 1
                 except: pass
-                if hcount == 5 or vcount == 5 or rdcount == 5 or ldcount == 5:
-                  best = 100000000000
                 best = max((hscore, vscore, ldscore, rdscore, best))
     return best
 
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
-def Ai_Move(Board, depth, alpha, beta, maximizingPlayer):
+def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
     valid_locations = GetAvailableMoves(Size)
-    if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): is_terminal = True
+    if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
+      is_terminal = True
     else: is_terminal = False
 
     # Base case: If the depth is zero or the game is over, return the current board's score.
     if depth == 0 or is_terminal:
         if is_terminal:
             if Game.Win_Check(Board, Size):
-                print(float('inf') * (1 if maximizingPlayer else -1))
-                return (None, float('inf') * (1 if maximizingPlayer else -1))
+                print(float('inf') * (1 if maximisingPlayer else -1))
+                return (None, (10000000000000 - depth) * (1 if maximisingPlayer else -1))
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
-            return (None, Score_calc(Turn) - Score_calc(Turn + 1))
+            return (None, Score_calc(maximisingPlayer) - Score_calc(not maximisingPlayer))
     
-    Player_symbol = 'X' if Turn %2 != 0 else 'O'
+    Player_symbol = 'O' if maximisingPlayer else 'X'
     # Maximize the score if it's the maximizing player's turn
-    if maximizingPlayer:
+    if maximisingPlayer:
         value = float('-inf')
         Best_move = [-1, -1]
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
-            
+            if Game.Win_Check(Board, Size):
+              new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
+              Board[move[0]][move[1]] = ' '
             new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
             Board[move[0]][move[1]] = ' '
  
@@ -260,16 +247,6 @@ class CustomGroup(pygame.sprite.Group):
     def current(self):
         return self.current
   
-class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, height, width, ID):
-      super().__init__()
-      self.ID = ID
-      self.bg = pygame.Rect(x, y, width, height)
-
-    def clicked(self, mousePos):
-       if self.bg.collidepoint(mousePos):
-          return True, self.ID
-
 class basePlayer(ABC):
    def __init__(self):
       pass
