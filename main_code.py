@@ -39,8 +39,12 @@ def get_Heat(list):
   return list[2]
  
 def Open_row_search(x, y, Piece):
-    Three = Open_Three = Four = Open_Four = False
+    Three = False
+    Open_Three = False #split multiple definitions at once
+    Four = False
+    Open_Four = False
     #horizontal
+    if Board[x][y] == Board[x+1][y] and Board[x+2][y] == Board[x][y] and Board[x][y] == Piece: #make similar lines like this (and verything)
     if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
         Three = True
         if Board[x-1][y] == Board[x+3][y] == ' ':
@@ -138,15 +142,20 @@ def Score_calc(maximisingPlayer):
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
 def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
     valid_locations = GetAvailableMoves(Size)
+    #print(Board)
+    #print(Game.Win_Check(Board, Size))
     if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
       is_terminal = True
+      if not Game.Win_Check(Board, Size):
+        raise exception
     else: is_terminal = False
 
     # Base case: If the depth is zero or the game is over, return the current board's score.
     if depth == 0 or is_terminal:
         if is_terminal:
             if Game.Win_Check(Board, Size):
-                print(float('inf') * (1 if maximisingPlayer else -1))
+                print((10000000000000 - depth) * (1 if maximisingPlayer else -1))
+                print(Board)
                 return (None, (10000000000000 - depth) * (1 if maximisingPlayer else -1))
             else: # Game is over, no more valid moves
                 return (None, 0)
