@@ -38,7 +38,7 @@ def Reset_HeatMap(HeatMap):
 def get_Heat(list):
   return list[2]
  
-def Open_row_search(x, y, Piece):
+def Open_row_search(x, y, Piece): #all except three here is pointless tbh since it wins anyway
     Three = False
     Open_Three = False #split multiple definitions at once
     Four = False
@@ -47,44 +47,44 @@ def Open_row_search(x, y, Piece):
     #if Board[x][y] == Board[x+1][y] and Board[x+2][y] == Board[x][y] and Board[x][y] == Piece: #make similar lines like this (and everything)
     if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
         Three = True
-        if Board[x-1][y] == Board[x+3][y] == ' ':
+        '''if Board[x-1][y] == Board[x+3][y] == ' ':
             Open_Three = True
         elif Board[x+3][y] == Piece:
             Four = True
             if Board[x-1][y] == Board[x+4][y] == ' ':
-                Open_Four = True
+                Open_Four = True'''
 
     #vertical
     if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
         Three = True
-        if Board[x][y-1] == Board[x][y+3] == ' ':
+        '''if Board[x][y-1] == Board[x][y+3] == ' ':
             Open_Three = True
         elif Board[x][y+3] == Piece:
             Four = True
             if Board[x][y-1] == Board[x][y+4] == ' ':
-                Open_Four = True
+                Open_Four = True'''
 
     #left diagonal
     if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
         Three = True
-        if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
+        '''if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
             Open_Three = True
         elif Board[x+3][y+3] == Piece:
             Four = True
             if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
-                Open_Four = True
+                Open_Four = True'''
 
     #right diagonal
     if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
         Three = True
-        if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
+        '''if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
             Open_Three = True
         elif Board[x-3][y+3] == Piece:
             Four = True
             if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
-                Open_Four = True
+                Open_Four = True'''
 
-    if Open_Four:
+    '''if Open_Four:
         print('open four')
         print(Piece)
         return 10000000000
@@ -95,15 +95,13 @@ def Open_row_search(x, y, Piece):
     elif Open_Three:
        print('open three')
        print(Piece)
-       return 10000000
-    elif Three:
-       print('three')
-       print(Piece)
+       return 10000000'''
+    if Three:
        return 100000
     else:
        return 0
 
-'''def Score_calc(maximisingPlayer):
+def Score_calc(maximisingPlayer):
     Piece = 'O' if maximisingPlayer else 'X'
     Opponent = 'X' if maximisingPlayer else 'O'
     best = 0
@@ -111,12 +109,13 @@ def Open_row_search(x, y, Piece):
        for y in range (1, Size-4):
          if Board[x][y] != ' ':
           Open = Open_row_search(x, y, Piece)
-          if Board[x][y] == Piece:
+          best = max((Open, best))
+          '''if Board[x][y] == Piece:
             best += Open
           else:
-            best -= Open
-          #best = max((Open, best))
-    for New_x in range (Size):
+            best -= Open'''
+
+    for New_x in range (Size): #may need to entirely redo the scoring, since open threes etc progress towards win, but otherwise it has no idea what it is doing
           for New_y in range (Size):
               hcount = vcount = ldcount = rdcount = 0
               hscore = vscore = ldscore = rdscore = 0
@@ -150,33 +149,29 @@ def Open_row_search(x, y, Piece):
                         rdscore += 1
                 except: pass
                 best = max((hscore, vscore, ldscore, rdscore, best))
-    return best'''
+    return best
 
-
-
-# Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
+#Minimax algorithm with Alpha beta Pruning for finding the best move on the game board.
 def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
     valid_locations = GetAvailableMoves(Size)
-    #print(Board)
-    #print(Game.Win_Check(Board, Size))
     if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
       is_terminal = True
       if not Game.Win_Check(Board, Size):
-        raise exception
+        raise Exception
     else: is_terminal = False
 
-    # Base case: If the depth is zero or the game is over, return the current board's score.
+    #If the depth is zero or the game is over, return the current board's score.
     if depth == 0 or is_terminal:
         if is_terminal:
             if Game.Win_Check(Board, Size):
-                print((10000000000000 - depth) * (1 if maximisingPlayer else -1))
+                print((10000000000000 + depth) * (1 if maximisingPlayer else -1))
                 print(Board)
-                return (None, (10000000000000 - depth) * (1 if maximisingPlayer else -1))
+                return (None, (10000000000000 + depth) * (1 if maximisingPlayer else -1))
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
-            return (None, 0)
-            #return (None, Score_calc(True) - Score_calc(False))
+            return (None, Score_calc(True) - Score_calc(False))
+            #return (None, 0)
     
     Player_symbol = 'O' if maximisingPlayer else 'X'
     # Maximize the score if it's the maximizing player's turn
@@ -186,9 +181,11 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
             if Game.Win_Check(Board, Size):
-              new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
-              Board[move[0]][move[1]] = ' '
-            new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
+              print('max win')
+              new_score = Ai_Move(Board, depth, alpha, beta, True)[1]
+            else:
+              print('max not win')
+              new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
             Board[move[0]][move[1]] = ' '
  
             # Update the best move and alpha value.
@@ -208,9 +205,9 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
             if Game.Win_Check(Board, Size):
-              new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
-              Board[move[0]][move[1]] = ' '
-            new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
+              new_score = Ai_Move(Board, depth, alpha, beta, False)[1]
+            else:
+                new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
             Board[move[0]][move[1]] = ' '
  
             # Update the best move and alpha value.
@@ -229,9 +226,9 @@ def GetAvailableMoves(Size):
   for i in range (Size):
     for j in range (Size):
       if Board[i][j] == ' ':
-      #if HeatMap[i][j] > 0:
-        AvailableMoves.append([i, j, HeatMap[i][j]])
-  #AvailableMoves.sort(reverse=True, key=get_Heat)
+        if HeatMap[i][j] > 0:
+          AvailableMoves.append([i, j, HeatMap[i][j]])
+  AvailableMoves.sort(reverse=True, key=get_Heat)
   return AvailableMoves
 
 class TextInput(pygame.sprite.Sprite):
@@ -409,7 +406,7 @@ class Drawing():
       RulesRect0.center = (180, 50)
       screen.blit(RULEST0, RulesRect0)
       
-      RULEST1 = FONT53.render('•   Gomoku is played on a 15x15 ', True, BLACK)
+      RULEST1 = FONT53.render('   Gomoku is played on a 15x15 ', True, BLACK)
       RulesRect1 = RULEST1.get_rect()
       RulesRect1.center = (345, 200)
       screen.blit(RULEST1, RulesRect1)
@@ -419,7 +416,7 @@ class Drawing():
       RulesRect2.center = (125, 240)
       screen.blit(RULEST2, RulesRect2)
       
-      RULEST3 = FONT53.render('•   Black plays first, and players ', True, BLACK)
+      RULEST3 = FONT53.render('   Black plays first, and players ', True, BLACK)
       RulesRect3 = RULEST3.get_rect()
       RulesRect3.center = (345, 315)
       screen.blit(RULEST3, RulesRect3)
@@ -434,7 +431,7 @@ class Drawing():
       RulesRect5.center = (351, 395)
       screen.blit(RULEST5, RulesRect5)
       
-      RULEST6 = FONT53.render('•   The winner is the first player to ', True, BLACK)
+      RULEST6 = FONT53.render('   The winner is the first player to ', True, BLACK)
       RulesRect6 = RULEST6.get_rect()
       RulesRect6.center = (360, 470)
       screen.blit(RULEST6, RulesRect6)
@@ -454,7 +451,7 @@ class Drawing():
       RulesRect9.center = (160, 590)
       screen.blit(RULEST9, RulesRect9)
       
-      RULEST10 = FONT53.render('•   Once placed, stones cannot be ', True, BLACK)
+      RULEST10 = FONT53.render('   Once placed, stones cannot be ', True, BLACK)
       RulesRect10 = RULEST10.get_rect()
       RulesRect10.center = (355, 665)
       screen.blit(RULEST10, RulesRect10)
@@ -843,35 +840,9 @@ class Game():
       pygame.display.flip()
 
     def Win_Check(Board, Size):
-      for x in range (0, Size-4):
-        for y in range (0, Size-4):
-          temp_piece = Board[x][y]
-          if temp_piece != " ":
-            count = 0
-            for _ in range(4):
-              if Board[x+_][y] == temp_piece:
-                count += 1
-              else:
-                count = 0
-            if count == 5:
-              return True
-            count = 0
-            for _ in range(4):
-              if Board[x][y+_] == temp_piece:
-                count += 1
-              else:
-                count = 0
-            if count == 5:
-              return True
-            count = 0
-            for _ in range(4):
-              if Board[x+_][y+_] == temp_piece:
-                count += 1
-              else:
-                count = 0
-            if count == 5:
-              return True
-            '''try:
+      for x in range (0, Size):
+        for y in range (0, Size):
+            try:
               if Board[x-2][y] == Board[x-1][y] == Board[x][y] == Board[x+1][y] == Board [x+2][y] != ' ':
                 return True
             except:
@@ -893,7 +864,7 @@ class Game():
               if Board[x-2][y+2] == Board[x-1][y+1] == Board[x][y] == Board[x+1][y-1] == Board [x+2][y-2] != ' ':
                 return True
             except:
-               pass'''
+               pass
       return False
           
     def Check_Draw(Board, Size):
@@ -916,7 +887,7 @@ while True:
     mouse_pos = pygame.mouse.get_pos()
     if (AI_turn and Updated) == True:
               Updated = False
-              Best_move, Max_score  = Ai_Move(Board, 2, float('-inf'), float('inf'), True)
+              Best_move, Max_score  = Ai_Move(Board, 4, float('-inf'), float('inf'), True)
               Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth)
               Board[Best_move[0]][Best_move[1]] = 'O'
               AI_turn = False
