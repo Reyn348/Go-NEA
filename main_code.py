@@ -44,7 +44,7 @@ def Open_row_search(x, y, Piece):
     Four = False
     Open_Four = False
     #horizontal
-    if Board[x][y] == Board[x+1][y] and Board[x+2][y] == Board[x][y] and Board[x][y] == Piece: #make similar lines like this (and verything)
+    #if Board[x][y] == Board[x+1][y] and Board[x+2][y] == Board[x][y] and Board[x][y] == Piece: #make similar lines like this (and everything)
     if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
         Three = True
         if Board[x-1][y] == Board[x+3][y] == ' ':
@@ -85,24 +85,37 @@ def Open_row_search(x, y, Piece):
                 Open_Four = True
 
     if Open_Four:
+        print('open four')
+        print(Piece)
         return 10000000000
-    if Four:
+    elif Four:
+       print('four')
+       print(Piece)
        return 1000000000
-    if Open_Three:
+    elif Open_Three:
+       print('open three')
+       print(Piece)
        return 10000000
-    if Three:
+    elif Three:
+       print('three')
+       print(Piece)
        return 100000
     else:
        return 0
 
-def Score_calc(maximisingPlayer):
+'''def Score_calc(maximisingPlayer):
     Piece = 'O' if maximisingPlayer else 'X'
     Opponent = 'X' if maximisingPlayer else 'O'
     best = 0
     for x in range (1, Size-4):
        for y in range (1, Size-4):
+         if Board[x][y] != ' ':
           Open = Open_row_search(x, y, Piece)
-          best = max((Open, best))
+          if Board[x][y] == Piece:
+            best += Open
+          else:
+            best -= Open
+          #best = max((Open, best))
     for New_x in range (Size):
           for New_y in range (Size):
               hcount = vcount = ldcount = rdcount = 0
@@ -137,7 +150,9 @@ def Score_calc(maximisingPlayer):
                         rdscore += 1
                 except: pass
                 best = max((hscore, vscore, ldscore, rdscore, best))
-    return best
+    return best'''
+
+
 
 # Minimax algorithm with Alpha-Beta Pruning for finding the best move on the game board.
 def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
@@ -160,7 +175,8 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
-            return (None, Score_calc(True) - Score_calc(False))
+            return (None, 0)
+            #return (None, Score_calc(True) - Score_calc(False))
     
     Player_symbol = 'O' if maximisingPlayer else 'X'
     # Maximize the score if it's the maximizing player's turn
@@ -212,9 +228,10 @@ def GetAvailableMoves(Size):
   AvailableMoves = []
   for i in range (Size):
     for j in range (Size):
-      if HeatMap[i][j] > 0:
+      if Board[i][j] == ' ':
+      #if HeatMap[i][j] > 0:
         AvailableMoves.append([i, j, HeatMap[i][j]])
-  AvailableMoves.sort(reverse=True, key=get_Heat)
+  #AvailableMoves.sort(reverse=True, key=get_Heat)
   return AvailableMoves
 
 class TextInput(pygame.sprite.Sprite):
@@ -826,31 +843,57 @@ class Game():
       pygame.display.flip()
 
     def Win_Check(Board, Size):
-      for x in range (0, Size):
-        for y in range (0, Size):
-          try:
-            if Board[x-2][y] == Board[x-1][y] == Board[x][y] == Board[x+1][y] == Board [x+2][y] != ' ':
+      for x in range (0, Size-4):
+        for y in range (0, Size-4):
+          temp_piece = Board[x][y]
+          if temp_piece != " ":
+            count = 0
+            for _ in range(4):
+              if Board[x+_][y] == temp_piece:
+                count += 1
+              else:
+                count = 0
+            if count == 5:
               return True
-          except:
-             pass
-          
-          try:
-            if Board[x][y-2] == Board[x][y-1] == Board[x][y] == Board[x][y+1] == Board [x][y+2] != ' ':
+            count = 0
+            for _ in range(4):
+              if Board[x][y+_] == temp_piece:
+                count += 1
+              else:
+                count = 0
+            if count == 5:
               return True
-          except:
-             pass
-          
-          try:
-            if Board[x-2][y-2] == Board[x-1][y-1] == Board[x][y] == Board[x+1][y+1] == Board [x+2][y+2] != ' ':
+            count = 0
+            for _ in range(4):
+              if Board[x+_][y+_] == temp_piece:
+                count += 1
+              else:
+                count = 0
+            if count == 5:
               return True
-          except:
-             pass
-          
-          try:
-            if Board[x-2][y+2] == Board[x-1][y+1] == Board[x][y] == Board[x+1][y-1] == Board [x+2][y-2] != ' ':
-              return True
-          except:
-             pass
+            '''try:
+              if Board[x-2][y] == Board[x-1][y] == Board[x][y] == Board[x+1][y] == Board [x+2][y] != ' ':
+                return True
+            except:
+               pass
+            
+            try:
+              if Board[x][y-2] == Board[x][y-1] == Board[x][y] == Board[x][y+1] == Board [x][y+2] != ' ':
+                return True
+            except:
+               pass
+            
+            try:
+              if Board[x-2][y-2] == Board[x-1][y-1] == Board[x][y] == Board[x+1][y+1] == Board [x+2][y+2] != ' ':
+                return True
+            except:
+               pass
+            
+            try:
+              if Board[x-2][y+2] == Board[x-1][y+1] == Board[x][y] == Board[x+1][y-1] == Board [x+2][y-2] != ' ':
+                return True
+            except:
+               pass'''
       return False
           
     def Check_Draw(Board, Size):
@@ -873,7 +916,7 @@ while True:
     mouse_pos = pygame.mouse.get_pos()
     if (AI_turn and Updated) == True:
               Updated = False
-              Best_move, Max_score  = Ai_Move(Board, 3, float('-inf'), float('inf'), True)
+              Best_move, Max_score  = Ai_Move(Board, 2, float('-inf'), float('inf'), True)
               Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth)
               Board[Best_move[0]][Best_move[1]] = 'O'
               AI_turn = False
