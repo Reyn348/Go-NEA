@@ -39,69 +39,61 @@ def get_Heat(list):
   return list[2]
  
 def Open_row_search(x, y, Piece): #all except three here is pointless tbh since it wins anyway
-    Three = False
-    Open_Three = False #split multiple definitions at once
+    Open_Three = False 
     Four = False
     Open_Four = False
     #horizontal
-    #if Board[x][y] == Board[x+1][y] and Board[x+2][y] == Board[x][y] and Board[x][y] == Piece: #make similar lines like this (and everything)
     if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
-        Three = True
-        '''if Board[x-1][y] == Board[x+3][y] == ' ':
+        if Board[x-1][y] == Board[x+3][y] == ' ':
             Open_Three = True
         elif Board[x+3][y] == Piece:
             Four = True
             if Board[x-1][y] == Board[x+4][y] == ' ':
-                Open_Four = True'''
+                Open_Four = True
 
     #vertical
     if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
-        Three = True
-        '''if Board[x][y-1] == Board[x][y+3] == ' ':
+        if Board[x][y-1] == Board[x][y+3] == ' ':
             Open_Three = True
         elif Board[x][y+3] == Piece:
             Four = True
             if Board[x][y-1] == Board[x][y+4] == ' ':
-                Open_Four = True'''
+                Open_Four = True
 
     #left diagonal
     if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
-        Three = True
-        '''if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
+        if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
             Open_Three = True
         elif Board[x+3][y+3] == Piece:
             Four = True
             if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
-                Open_Four = True'''
+                Open_Four = True
 
     #right diagonal
     if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
-        Three = True
-        '''if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
+        if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
             Open_Three = True
         elif Board[x-3][y+3] == Piece:
             Four = True
             if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
-                Open_Four = True'''
+                Open_Four = True
 
-    '''if Open_Four:
+    if Open_Four:
         print('open four')
         print(Piece)
-        return 10000000000
+        return 10000000000, True
     elif Four:
        print('four')
        print(Piece)
-       return 1000000000
+       return 1000000000, True
     elif Open_Three:
        print('open three')
        print(Piece)
-       return 10000000'''
-    if Three:
-       return 100000
+       return 10000000, True
     else:
        return 0
 
-def Score_calc(maximisingPlayer):
+'''def Score_calc(maximisingPlayer):
     Piece = 'O' if maximisingPlayer else 'X'
     Opponent = 'X' if maximisingPlayer else 'O'
     best = 0
@@ -110,10 +102,10 @@ def Score_calc(maximisingPlayer):
          if Board[x][y] != ' ':
           Open = Open_row_search(x, y, Piece)
           best = max((Open, best))
-          '''if Board[x][y] == Piece:
+          if Board[x][y] == Piece:
             best += Open
           else:
-            best -= Open'''
+            best -= Open
 
     for New_x in range (Size): #may need to entirely redo the scoring, since open threes etc progress towards win, but otherwise it has no idea what it is doing
           for New_y in range (Size):#make blocking an open 3 important
@@ -149,14 +141,107 @@ def Score_calc(maximisingPlayer):
                         rdscore -= 1
                 except: pass
                 best = max((hscore, vscore, ldscore, rdscore, best))
+    return best'''
+
+def Score_calc(Board, Max_turn): 
+    Piece = 'X' if Max_turn else 'O'
+    Opponent = 'O' if Max_turn else 'X'
+    best = 0
+    for x in range (Size):
+        for y in range (Size): #is the range going to range or break
+            best += Open_row_search(x, y, Piece)[1]
+            if Open_row_search(x, y, Piece)[2]: #bit slow but works
+                print('break')
+                break #might not work, go to next iteration basically
+            #horizontal count
+            if Board[x][y] == Board[x+1][y] == Piece or Opponent:
+                if Board[x+2][y] != Board[x][y]:
+                    if Board[x][y] == Piece:
+                        best += 1
+                        if Board[x-1][y] or Board[x+2][y] == Opponent:
+                            best -=1
+                    else:
+                        best -= 1
+                        if Board[x-1][y] or Board[x+2][y] == Piece:
+                            best += 3
+                else:
+                    if Board[x][y] == Piece:
+                        best += 2
+                        if Board[x-1][y] or Board[x+3][y] == Opponent:
+                            best -=1
+                    else:
+                        best -= 2
+                        if Board[x-1][y] or Board[x+3][y] == Piece:
+                            best += 5
+            #vertical count
+            if Board[x][y] == Board[x][y+1] == Piece or Opponent:
+                if Board[x][y+2] != Board[x][y]:
+                    if Board[x][y] == Piece:
+                        best += 1
+                        if Board[x][y-1] or Board[x][y+2] == Opponent:
+                            best -=1
+                    else:
+                        best -= 1
+                        if Board[x][y-1] or Board[x][y+2] == Piece:
+                            best += 3
+                else:
+                    if Board[x][y] == Piece:
+                        best += 2
+                        if Board[x][y-1] or Board[x][y+3] == Opponent:
+                            best -=1
+                    else:
+                        best -= 2
+                        if Board[x][y-1] or Board[x][y+3] == Piece:
+                            best += 5
+            #left diagonal count -x +y to +x -y
+            if Board[x][y] == Board[x+1][y-1] == Piece or Opponent:
+                if Board[x+2][y-2] != Board[x][y]:
+                    if Board[x][y] == Piece:
+                        best += 1
+                        if Board[x-1][y+1] or Board[x+2][y-2] == Opponent:
+                            best -=1
+                    else:
+                        best -= 1
+                        if Board[x-1][y+1] or Board[x+2][y-2] == Piece:
+                            best += 3
+                else:
+                    if Board[x][y] == Piece:
+                        best += 2
+                        if Board[x-1][y+1] or Board[x+3][y-3] == Opponent:
+                            best -=1
+                    else:
+                        best -= 2
+                        if Board[x-1][y+1] or Board[x+3][y-3] == Piece:
+                            best += 5
+            #right diagonal -x -y to +x +y
+            if Board[x][y] == Board[x+1][y] == Piece or Opponent:
+                if Board[x+2][y+2] != Board[x][y]:
+                    if Board[x][y] == Piece:
+                        best += 1
+                        if Board[x-1][y-1] or Board[x+2][y+2] == Opponent:
+                            best -=1
+                    else:
+                        best -= 1
+                        if Board[x-1][y-1] or Board[x+2][y+2] == Piece:
+                            best += 3
+                else:
+                    if Board[x][y] == Piece:
+                        best += 2
+                        if Board[x-1][y-1] or Board[x+3][y+3] == Opponent:
+                            best -=1
+                    else:
+                        best -= 2
+                        if Board[x-1][y-1] or Board[x+3][y+3] == Piece:
+                            best += 5
     return best
+
 
 #Minimax algorithm with Alpha beta Pruning for finding the best move on the game board.
 def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
     valid_locations = GetAvailableMoves(Size)
     if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
       is_terminal = True
-      if not Game.Win_Check(Board, Size):
+      if not Game.Win_Check(Board, Size): #delete later probably
         raise Exception
     else: is_terminal = False
 
@@ -169,7 +254,7 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
-            return (None, Score_calc(True) - Score_calc(False))
+            return (None, Score_calc(Board, True) - Score_calc(Board, False))
             #return (None, 0)
     
     Player_symbol = 'O' if maximisingPlayer else 'X'
