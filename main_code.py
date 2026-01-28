@@ -81,17 +81,17 @@ def Open_row_search(x, y, Piece): #all except three here is pointless tbh since 
     if Open_Four:
         print('open four')
         print(Piece)
-        return 10000000000, True
+        return 10000, True
     elif Four:
        print('four')
        print(Piece)
-       return 1000000000, True
+       return 1000, True
     elif Open_Three:
        print('open three')
        print(Piece)
-       return 10000000, True
+       return 10, True
     else:
-       return 0
+       return 0, False
 
 '''def Score_calc(maximisingPlayer):
     Piece = 'O' if maximisingPlayer else 'X'
@@ -147,13 +147,13 @@ def Score_calc(Board, Max_turn):
     Piece = 'X' if Max_turn else 'O'
     Opponent = 'O' if Max_turn else 'X'
     best = 0
-    for x in range (Size):
-        for y in range (Size): #is the range going to range or break
-            best += Open_row_search(x, y, Piece)[1]
-            if Open_row_search(x, y, Piece)[2]: #bit slow but works
-                print('break')
-                break #might not work, go to next iteration basically
-            #horizontal count
+    print(Piece)
+    for x in range (Size-4):
+        for y in range (Size-4): #temp fix will need to be improved
+            add, _ = Open_row_search(x, y, Piece)
+            best += add
+    for x in range (1, Size-3):
+        for y in range (Size):
             if Board[x][y] == Board[x+1][y] == Piece or Opponent:
                 if Board[x+2][y] != Board[x][y]:
                     if Board[x][y] == Piece:
@@ -174,6 +174,8 @@ def Score_calc(Board, Max_turn):
                         if Board[x-1][y] or Board[x+3][y] == Piece:
                             best += 5
             #vertical count
+    for x in range (Size):
+        for y in range (1, Size-3):
             if Board[x][y] == Board[x][y+1] == Piece or Opponent:
                 if Board[x][y+2] != Board[x][y]:
                     if Board[x][y] == Piece:
@@ -194,6 +196,8 @@ def Score_calc(Board, Max_turn):
                         if Board[x][y-1] or Board[x][y+3] == Piece:
                             best += 5
             #left diagonal count -x +y to +x -y
+    for x in range (1, Size-3):
+        for y in range (3, Size-1):
             if Board[x][y] == Board[x+1][y-1] == Piece or Opponent:
                 if Board[x+2][y-2] != Board[x][y]:
                     if Board[x][y] == Piece:
@@ -214,6 +218,8 @@ def Score_calc(Board, Max_turn):
                         if Board[x-1][y+1] or Board[x+3][y-3] == Piece:
                             best += 5
             #right diagonal -x -y to +x +y
+    for x in range (1, Size-3):
+        for y in range (1, Size-3):
             if Board[x][y] == Board[x+1][y] == Piece or Opponent:
                 if Board[x+2][y+2] != Board[x][y]:
                     if Board[x][y] == Piece:
@@ -249,8 +255,8 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
     if depth == 0 or is_terminal:
         if is_terminal:
             if Game.Win_Check(Board, Size):
-                #print((10000000000000 + depth) * (1 if maximisingPlayer else -1))
-                return (None, (10000000000000 + depth) * (1 if maximisingPlayer else -1))
+                #print((1000000000 + depth) * (1 if maximisingPlayer else -1))
+                return (None, (1000000000 + depth) * (1 if maximisingPlayer else -1))
             else: # Game is over, no more valid moves
                 return (None, 0)
         else: # Depth is zero
