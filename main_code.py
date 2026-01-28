@@ -116,8 +116,8 @@ def Score_calc(maximisingPlayer):
             best -= Open'''
 
     for New_x in range (Size): #may need to entirely redo the scoring, since open threes etc progress towards win, but otherwise it has no idea what it is doing
-          for New_y in range (Size):
-              hcount = vcount = ldcount = rdcount = 0
+          for New_y in range (Size):#make blocking an open 3 important
+              hcount = vcount = ldcount = rdcount = 0 #blocks on an open four but that doesn't really matter tbh
               hscore = vscore = ldscore = rdscore = 0
               for i in range (4):
                 try:
@@ -125,28 +125,28 @@ def Score_calc(maximisingPlayer):
                         hcount += 1
                         hscore += int(BoardScore[New_x + i][New_y])*(hcount+1)
                     elif Board[New_x + i][New_y] == Opponent:
-                        hscore += 1
+                        hscore -= 1
                 except: pass
                 try:
                     if Board[New_x][New_y + i] == Piece:
                         vcount += 1
                         vscore += int(BoardScore[New_x][New_y +i])*(vcount+1)
                     elif Board[New_x][New_y + i] == Opponent:
-                        vscore += 1
+                        vscore -= 1
                 except: pass
                 try:
                     if Board[New_x - i][New_y + i] == Piece:
                         ldcount += 1
                         ldscore += int(BoardScore[New_x - i][New_y + i])*(ldcount+1)
                     elif Board[New_x - i][New_y + i] == Opponent:
-                        ldscore += 1
+                        ldscore -= 1
                 except: pass
                 try:
                     if Board[New_x - i][New_y - i] == Piece:
                         rdcount += 1
                         rdscore += int(BoardScore[New_x - i][New_y - i])*(rdcount+1)
                     elif Board[New_x - i][New_y - 1] == Opponent:
-                        rdscore += 1
+                        rdscore -= 1
                 except: pass
                 best = max((hscore, vscore, ldscore, rdscore, best))
     return best
@@ -164,8 +164,7 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
     if depth == 0 or is_terminal:
         if is_terminal:
             if Game.Win_Check(Board, Size):
-                print((10000000000000 + depth) * (1 if maximisingPlayer else -1))
-                print(Board)
+                #print((10000000000000 + depth) * (1 if maximisingPlayer else -1))
                 return (None, (10000000000000 + depth) * (1 if maximisingPlayer else -1))
             else: # Game is over, no more valid moves
                 return (None, 0)
@@ -181,15 +180,15 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
             if Game.Win_Check(Board, Size):
-              print('max win')
+              #print('max win')
               new_score = Ai_Move(Board, depth, alpha, beta, True)[1]
             else:
-              print('max not win')
               new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
             Board[move[0]][move[1]] = ' '
  
             # Update the best move and alpha value.
             if new_score > value:
+                print(move)
                 value = new_score
                 Best_move = move
             alpha = max((alpha, value))
@@ -205,6 +204,7 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
         for move in valid_locations:
             Board[move[0]][move[1]] = Player_symbol
             if Game.Win_Check(Board, Size):
+              #print('min win')
               new_score = Ai_Move(Board, depth, alpha, beta, False)[1]
             else:
                 new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
@@ -866,7 +866,7 @@ class Game():
             except:
                pass
       return False
-          
+    
     def Check_Draw(Board, Size):
       for x in range (Size):
         for y in range (Size):
