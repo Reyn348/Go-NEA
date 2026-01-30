@@ -87,59 +87,9 @@ def Open_row_search(x, y, Piece): #all except three here is pointless tbh since 
     else:
        return 0
 
-'''def Score_calcxx(maximisingPlayer):
-    Piece = 'O' if maximisingPlayer else 'X'
-    Opponent = 'X' if maximisingPlayer else 'O'
-    best = 0
-    for x in range (1, Size-4):
-       for y in range (1, Size-4):
-         if Board[x][y] != ' ':
-          Open = Open_row_search(x, y, Piece)
-          best = max((Open, best))
-          if Board[x][y] == Piece:
-            best += Open
-          else:
-            best -= Open
-
-    for New_x in range (Size): #may need to entirely redo the scoring, since open threes etc progress towards win, but otherwise it has no idea what it is doing
-          for New_y in range (Size):#make blocking an open 3 important
-              hcount = vcount = ldcount = rdcount = 0 #blocks on an open four but that doesn't really matter tbh
-              hscore = vscore = ldscore = rdscore = 0
-              for i in range (4):
-                try:
-                    if Board[New_x + i][New_y] == Piece:
-                        hcount += 1
-                        hscore += int(BoardScore[New_x + i][New_y])*(hcount+1)
-                    elif Board[New_x + i][New_y] == Opponent:
-                        hscore -= 1
-                except: pass
-                try:
-                    if Board[New_x][New_y + i] == Piece:
-                        vcount += 1
-                        vscore += int(BoardScore[New_x][New_y +i])*(vcount+1)
-                    elif Board[New_x][New_y + i] == Opponent:
-                        vscore -= 1
-                except: pass
-                try:
-                    if Board[New_x - i][New_y + i] == Piece:
-                        ldcount += 1
-                        ldscore += int(BoardScore[New_x - i][New_y + i])*(ldcount+1)
-                    elif Board[New_x - i][New_y + i] == Opponent:
-                        ldscore -= 1
-                except: pass
-                try:
-                    if Board[New_x - i][New_y - i] == Piece:
-                        rdcount += 1
-                        rdscore += int(BoardScore[New_x - i][New_y - i])*(rdcount+1)
-                    elif Board[New_x - i][New_y - 1] == Opponent:
-                        rdscore -= 1
-                except: pass
-                best = max((hscore, vscore, ldscore, rdscore, best))
-    return best'''
-
 def Score_calc(Board, Max_turn): 
-    Piece = 'X' if Max_turn else 'O'
-    Opponent = 'O' if Max_turn else 'X'
+    Piece = 'O' if Max_turn else 'X'
+    Opponent = 'X' if Max_turn else 'O'
     best = 0
     for x in range (Size-4):
         for y in range (Size-4): #temp fix will need to be improved
@@ -290,7 +240,7 @@ def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
               new_score = Ai_Move(Board, depth, alpha, beta, False)[1]
             else:
                 new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
-                print(new_score)
+                #print(new_score)
             Board[move[0]][move[1]] = ' '
  
             # Update the best move and alpha value.
@@ -384,7 +334,7 @@ class basePlayer(ABC):
           if y % 30 <= 10:
             YIndex = math.floor(y/30)
           elif y % 30 >= 20:
-            YIndex = math.ceil(y/30)
+            YIndex = math.ceil(y/38)
       else:
          XIndex = x
          YIndex = y
@@ -480,6 +430,7 @@ class Drawing():
 
   def Rules(temp):
       Redraw = False
+      Prev = ''
       for i in range (5):
         pygame.draw.rect(screen, WHITE, (RULES_RECT[i]), 4)
         pygame.display.flip()
@@ -556,7 +507,8 @@ class Drawing():
       Identifier = 'RULES'
       if temp == 'GAME':
          Redraw = True
-      return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Redraw
+         Prev = Rules
+      return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Redraw, Prev
 
   def P1_Name():
       pygame.draw.rect(screen, (SCREEN_COLOUR),(380, 235, 680, 540), 0)
@@ -784,7 +736,7 @@ class Game():
     def __init__(self):
        pass
 
-    def Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU):  
+    def Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev):  
       if Next == 'AI_opponent':
          Drawing.Clean()
          X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
@@ -802,52 +754,33 @@ class Game():
     
       elif Next == 'Undo':
          X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn = Game.Undo_Move(Size, Board, Temp_Board, Turn_count, Turn)
+      
+      if Prev == 'Rules' and Next == 'GAME':
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Next)
+        if Size == 15:
+                            for i in range (Size):
+                                for j in range (Size):
+                                    if Board[i][j] == 'X':
+                                      pygame.draw.circle(screen, P1COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
+                                      pygame.display.flip()
+                                    elif Board[i][j] == 'O':
+                                      pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
+                                      pygame.display.flip()
+                           elif Size == 19:
+                            for i in range (Size):
+                                for j in range (Size):
+                                    if Board[i][j] == 'X':
+                                      pygame.draw.circle(screen, P1COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
+                                      pygame.display.flip()
+                                    elif Board[i][j] == 'O':
+                                      pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
+                                      pygame.display.flip()
 
       else:
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
         
       return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU
-      
-    def get_BoardScore(Size):
-      if Size == 15:
-        BoardScore = [['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'], 
-                    ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'], 
-                    ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '5', '5', '5', '5', '5', '5', '5', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '5', '6', '6', '6', '6', '6', '5', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '5', '6', '7', '7', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '8', '7', '6', '5', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '5', '6', '7', '7', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '6', '6', '6', '6', '5', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '5', '5', '5', '5', '5', '5', '5', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1'], 
-                    ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'], 
-                    ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'], 
-                    ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']]
-        
-      elif Size == 19:
-        BoardScore= [['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],
-                    ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'],
-                    ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'],
-                    ['1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '6', '6', '6', '6', '6', '6', '6', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '7', '7', '7', '7', '7', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '8', '8', '8', '8', '8', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '9', '9', '8', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '9', '9', '8', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '8', '8', '8', '8', '8', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '7', '7', '7', '7', '7', '7', '7', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '6', '6', '6', '6', '6', '6', '6', '6', '6', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '4', '3', '2', '1'],
-                    ['1', '2', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '3', '2', '1'],
-                    ['1', '2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '2', '1'],
-                    ['1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '1'],
-                    ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']]
-      return BoardScore
 
     def Undo_Move(Size, Board, Temp_Board, Turn_Count, Turn):
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
@@ -970,7 +903,7 @@ while True:
     mouse_pos = pygame.mouse.get_pos()
     if (AI_turn and Updated) == True:
               Updated = False
-              Best_move, Max_score  = Ai_Move(Board, 4, float('-inf'), float('inf'), True)
+              Best_move, Max_score  = Ai_Move(Board, 3, float('-inf'), float('inf'), True)
               Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth)
               Board[Best_move[0]][Best_move[1]] = 'O'
               AI_turn = False
@@ -978,7 +911,7 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.quit:
             pygame.quit()
-            sys.exit
+            sys.exit()
            
         if event.type == pygame.MOUSEBUTTONDOWN:
             for textinput in TextInputGroup:
@@ -999,24 +932,24 @@ while True:
                      if Next == 'Rules':
                         Drawing.Clean()
                         temp = Identifier
-                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Redraw = Drawing.Rules(temp)
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Redraw, Prev = Drawing.Rules(temp)
                         if Redraw:
                            if Size == 15:
                             for i in range (Size):
                                 for j in range (Size):
-                                    if Temp_Board[i][j] == 'X':
+                                    if Board[i][j] == 'X':
                                       pygame.draw.circle(screen, P1COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
                                       pygame.display.flip()
-                                    elif Temp_Board[i][j] == 'O':
+                                    elif Board[i][j] == 'O':
                                       pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
                                       pygame.display.flip()
                            elif Size == 19:
                             for i in range (Size):
                                 for j in range (Size):
-                                    if Temp_Board[i][j] == 'X':
+                                    if Board[i][j] == 'X':
                                       pygame.draw.circle(screen, P1COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
                                       pygame.display.flip()
-                                    elif Temp_Board[i][j] == 'O':
+                                    elif Board[i][j] == 'O':
                                       pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
                                       pygame.display.flip()
                         break
@@ -1039,7 +972,7 @@ while True:
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
                         break
                      else:
-                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU = Game.Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU)
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU = Game.Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev)
                         break
 
             if not Line_Check:
