@@ -1,8 +1,10 @@
 import pygame
+from pygame.locals import *
 
+#pygame inits
 pygame.init()
 pygame.font.init()
-pygame.display.set_caption('Gomoku')
+pygame.display.set_caption('Gomoku NEA')
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
@@ -22,22 +24,19 @@ screen = pygame.display.set_mode(SIZE)
 screen.fill(SCREEN_COLOUR)
 
 #game globals
-Time = pygame.time.get_ticks()
 Size = 0
 Board = []
 Temp_Board = []
 HeatMap = []
 HeatTruth = []
-BoardScore = []
 Turn_count = 0
-Difficulty = ''
 Turn = 0
 Seconds = 0
 Minutes = 0
-Depth = 0
 Line_Check = False
 AI_turn = False
 Updated = False
+Prev = ''
 
 #player gloabls
 P1SCORE = 0
@@ -62,10 +61,8 @@ MAIN_MENU_RECT = [pygame.Rect(0, 0, 400, 100),
                   ]
                   
 RULES_RECT = [pygame.Rect(0, 0, 360, 100),
-              pygame.Rect(35, 150, 670, 650),
-              pygame.Rect(770, 150, 620, 300),
-              pygame.Rect(770, 500, 620, 300),
-              pygame.Rect(1200, 800,240, 100)
+              pygame.Rect(120, 150, 1210, 625),
+              pygame.Rect(1190, 800, 240, 90)
               ]
               
 CPU_DIFF_RECT = [pygame.Rect(420, 250, 600, 80),
@@ -83,7 +80,7 @@ BOARD_SIZE_RECT = [pygame.Rect(835, 540, 180, 60),
                    pygame.Rect(835, 620, 180, 60)
                    ]
                    
-MAIN_PROG_RECT = [pygame.Rect(100, 130, 300, 90),
+MAIN_PROG_RECT = [pygame.Rect(80, 130, 320, 90),
                   pygame.Rect(50, 350, 400, 150),
                   pygame.Rect(140, 650, 220, 90),
                   pygame.Rect(625, 100, 600, 110),
@@ -97,6 +94,5 @@ FONT75 = pygame.font.SysFont('freesanbold.ttf', 75)
 FONT68 = pygame.font.SysFont('freesanbold.ttf', 68)
 FONT65 = pygame.font.SysFont('freesanbold.ttf', 65)
 FONT55 = pygame.font.SysFont('freesanbold.ttf', 55)
-FONT53 = pygame.font.SysFont('freesanbold.ttf', 53)
 FONT50 = pygame.font.SysFont('freesanbold.ttf', 50)
 FONT40 = pygame.font.SysFont('freesanbold.ttf', 40)

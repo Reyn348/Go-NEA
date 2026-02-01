@@ -5,265 +5,6 @@ import math
 import numpy
 from abc import ABC
 
-#sys.setrecursionlimit(100000)
-
-def Update_HeatMap(HeatMap, Move, HeatTruth):
-    Move_X = Move[0]
-    Move_Y = Move[1]
-    HeatMap[Move_X][Move_Y] = -1
-    for k in range (2):
-          X_pos = min((14, Move_X + k))
-          X_neg = max((0, Move_X - k))
-          Y_pos = min((14, Move_Y + k))
-          Y_neg = max((0, Move_Y - k))
-          if HeatMap[X_pos][Y_pos] > -1 and not HeatTruth[X_pos][Y_pos]: HeatMap[X_pos][Y_pos] += 1; HeatTruth[X_pos][Y_pos] = True
-          if HeatMap[X_pos][Y_neg] > -1 and not HeatTruth[X_pos][Y_neg]: HeatMap[X_pos][Y_neg] += 1; HeatTruth[X_pos][Y_neg] = True
-          if HeatMap[X_neg][Y_pos] > -1 and not HeatTruth[X_neg][Y_pos]: HeatMap[X_neg][Y_pos] += 1; HeatTruth[X_neg][Y_pos] = True
-          if HeatMap[X_neg][Y_neg] > -1 and not HeatTruth[X_neg][Y_neg]: HeatMap[X_neg][Y_neg] += 1; HeatTruth[X_neg][Y_neg] = True
-    HeatTruth = Reset_HeatTruth(HeatTruth)
-    return HeatMap
- 
-def Reset_HeatTruth(HeatTruth):
-    for i in range (len(HeatTruth)):
-        for j in range (len(HeatTruth)):
-            HeatTruth[i][j] = False
-    return HeatTruth
- 
-def Reset_HeatMap(HeatMap):
-    for i in range (len(HeatMap)):
-        for j in range (len(HeatMap)):
-            HeatMap[i][j] = 0
-    return HeatMap
- 
-def get_Heat(list):
-  return list[2]
- 
-def Open_row_search(x, y, Piece): #all except three here is pointless tbh since it wins anyway
-    Open_Three = False 
-    Four = False
-    Open_Four = False
-    #horizontal
-    if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
-        if Board[x-1][y] == Board[x+3][y] == ' ':
-            Open_Three = True
-        elif Board[x+3][y] == Piece:
-            Four = True
-            if Board[x-1][y] == Board[x+4][y] == ' ':
-                Open_Four = True
-
-    #vertical
-    if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
-        if Board[x][y-1] == Board[x][y+3] == ' ':
-            Open_Three = True
-        elif Board[x][y+3] == Piece:
-            Four = True
-            if Board[x][y-1] == Board[x][y+4] == ' ':
-                Open_Four = True
-
-    #left diagonal
-    if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
-        if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
-            Open_Three = True
-        elif Board[x+3][y+3] == Piece:
-            Four = True
-            if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
-                Open_Four = True
-
-    #right diagonal
-    if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
-        if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
-            Open_Three = True
-        elif Board[x-3][y+3] == Piece:
-            Four = True
-            if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
-                Open_Four = True
-
-    if Open_Four:
-        return 10000
-    elif Four:
-       return 1000
-    elif Open_Three:
-       return 10
-    else:
-       return 0
-
-def Score_calc(Board, Max_turn): 
-    Piece = 'O' if Max_turn else 'X'
-    Opponent = 'X' if Max_turn else 'O'
-    best = 0
-    for x in range (Size-4):
-        for y in range (Size-4): #temp fix will need to be improved
-            best += Open_row_search(x, y, Piece)
-    for x in range (1, Size-3):
-        for y in range (Size):
-            if Board[x][y] == Board[x+1][y] == Piece or Board[x][y] == Board[x+1][y] == Opponent:
-                if Board[x+2][y] != Board[x][y]:
-                    if Board[x][y] == Piece:
-                        best += 1
-                        if Board[x-1][y] or Board[x+2][y] == Opponent:
-                            best -=1
-                    else:
-                        best -= 1
-                        if Board[x-1][y] or Board[x+2][y] == Piece:
-                            best += 3
-                else:
-                    if Board[x][y] == Piece:
-                        best += 2
-                        if Board[x-1][y] or Board[x+3][y] == Opponent:
-                            best -=1
-                    else:
-                        best -= 2
-                        if Board[x-1][y] or Board[x+3][y] == Piece:
-                            best += 5
-            #vertical count
-    for x in range (Size):
-        for y in range (1, Size-3):
-            if Board[x][y] == Board[x][y+1] == Piece or Board[x][y] == Opponent:
-                if Board[x][y+2] != Board[x][y]:
-                    if Board[x][y] == Piece:
-                        best += 1
-                        if Board[x][y-1] or Board[x][y+2] == Opponent:
-                            best -=1
-                    else:
-                        best -= 1
-                        if Board[x][y-1] or Board[x][y+2] == Piece:
-                            best += 3
-                else:
-                    if Board[x][y] == Piece:
-                        best += 2
-                        if Board[x][y-1] or Board[x][y+3] == Opponent:
-                            best -=1
-                    else:
-                        best -= 2
-                        if Board[x][y-1] or Board[x][y+3] == Piece:
-                            best += 5
-            #left diagonal count -x +y to +x -y
-    for x in range (1, Size-3):
-        for y in range (3, Size-1):
-            if Board[x][y] == Board[x+1][y-1] == Piece or Board[x][y] == Board[x+1][y-1] == Opponent:
-                if Board[x+2][y-2] != Board[x][y]:
-                    if Board[x][y] == Piece:
-                        best += 1
-                        if Board[x-1][y+1] or Board[x+2][y-2] == Opponent:
-                            best -=1
-                    else:
-                        best -= 1
-                        if Board[x-1][y+1] or Board[x+2][y-2] == Piece:
-                            best += 3
-                else:
-                    if Board[x][y] == Piece:
-                        best += 2
-                        if Board[x-1][y+1] or Board[x+3][y-3] == Opponent:
-                            best -=1
-                    else:
-                        best -= 2
-                        if Board[x-1][y+1] or Board[x+3][y-3] == Piece:
-                            best += 5
-            #right diagonal -x -y to +x +y
-    for x in range (1, Size-3):
-        for y in range (1, Size-3):
-            if Board[x][y] == Board[x+1][y] == Piece or Board[x][y] == Board[x+1][y] == Opponent:
-                if Board[x+2][y+2] != Board[x][y]:
-                    if Board[x][y] == Piece:
-                        best += 1
-                        if Board[x-1][y-1] or Board[x+2][y+2] == Opponent:
-                            best -=1
-                    else:
-                        best -= 1
-                        if Board[x-1][y-1] or Board[x+2][y+2] == Piece:
-                            best += 3
-                else:
-                    if Board[x][y] == Piece:
-                        best += 2
-                        if Board[x-1][y-1] or Board[x+3][y+3] == Opponent:
-                            best -=1
-                    else:
-                        best -= 2
-                        if Board[x-1][y-1] or Board[x+3][y+3] == Piece:
-                            best += 5
-    return best
-
-
-#Minimax algorithm with Alpha beta Pruning for finding the best move on the game board.
-def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
-    valid_locations = GetAvailableMoves(Size)
-    if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
-      is_terminal = True
-      if not Game.Win_Check(Board, Size): #delete later probably
-        raise Exception
-    else: is_terminal = False
-
-    #If the depth is zero or the game is over, return the current board's score.
-    if depth == 0 or is_terminal:
-        if is_terminal:
-            if Game.Win_Check(Board, Size):
-                #print((1000000000 + depth) * (1 if maximisingPlayer else -1))
-                return (None, (1000000000 + depth) * (1 if maximisingPlayer else -1))
-            else: # Game is over, no more valid moves
-                return (None, 0)
-        else: # Depth is zero
-            return (None, Score_calc(Board, True) - Score_calc(Board, False))
-            #return (None, 0)
-    
-    Player_symbol = 'O' if maximisingPlayer else 'X'
-    # Maximize the score if it's the maximizing player's turn
-    if maximisingPlayer:
-        value = float('-inf')
-        Best_move = [-1, -1]
-        for move in valid_locations:
-            Board[move[0]][move[1]] = Player_symbol
-            if Game.Win_Check(Board, Size):
-              #print('max win')
-              new_score = Ai_Move(Board, depth, alpha, beta, True)[1]
-            else:
-              new_score = Ai_Move(Board, depth-1, alpha, beta, False)[1]
-            Board[move[0]][move[1]] = ' '
- 
-            # Update the best move and alpha value.
-            if new_score > value:
-                value = new_score
-                Best_move = move
-            alpha = max((alpha, value))
- 
-            # Prune the search if the alpha value is greater than or equal to beta.
-            if alpha >= beta:
-                break
-        return Best_move, value
- 
-    else: # Minimize the score if it's the minimizing player's turn.
-        value = float('inf')
-        Best_move = [-1, -1]
-        for move in valid_locations:
-            Board[move[0]][move[1]] = Player_symbol
-            if Game.Win_Check(Board, Size):
-              #print('min win')
-              new_score = Ai_Move(Board, depth, alpha, beta, False)[1]
-            else:
-                new_score = Ai_Move(Board, depth-1, alpha, beta, True)[1]
-                #print(new_score)
-            Board[move[0]][move[1]] = ' '
- 
-            # Update the best move and alpha value.
-            if new_score < value:
-                value = new_score
-                Best_move = move
-            beta = min((beta, value))
- 
-            # Prune the search if the alpha value is greater than or equal to beta.
-            if alpha >= beta:
-                break
-        return Best_move, value
-
-def GetAvailableMoves(Size):
-  AvailableMoves = []
-  for i in range (Size):
-    for j in range (Size):
-      if Board[i][j] == ' ':
-        if HeatMap[i][j] > 0:
-          AvailableMoves.append([i, j, HeatMap[i][j]])
-  AvailableMoves.sort(reverse=True, key=get_Heat)
-  return AvailableMoves
-
 class TextInput(pygame.sprite.Sprite):
     def __init__(self, x, y, width=100, height=50, color= BLACK, bgcolor=WHITE, selectedColor=(190,195,198)):
         super().__init__()
@@ -276,13 +17,13 @@ class TextInput(pygame.sprite.Sprite):
         self.text = self.font.render(self.text_value, True, self.color)
         self.bg = pygame.Rect(x, y, width, height)
        
-    def clicked(self, mousePos):
+    def clicked(self, mousePos): #determine if textbox has been selected
         if self.bg.collidepoint(mousePos):
             self.isSelected = not(self.isSelected)
             return True
         return False
        
-    def update_text(self, new_text):
+    def update_text(self, new_text): #change text as it is entered
         temp = self.font.render(new_text, True, self.color)
         if temp.get_rect().width >= (self.bg.width - 20):
             return
@@ -290,7 +31,7 @@ class TextInput(pygame.sprite.Sprite):
         self.text = temp
         return self.text_value
        
-    def render(self, display):
+    def render(self, display): #output text onto sreen
         self.pos = self.text.get_rect(center = (self.bg.x + self.bg.width/2, self.bg.y + self.bg.height/2))
         if self.isSelected:
             pygame.draw.rect(display, self.selectedColor, self.bg)
@@ -298,7 +39,7 @@ class TextInput(pygame.sprite.Sprite):
             pygame.draw.rect(display, self.bgcolor, self.bg)
         display.blit(self.text, self.pos)
        
-class CustomGroup(pygame.sprite.Group):
+class CustomGroup(pygame.sprite.Group): #allow for textboxes to be made with ease
     def __init__(self):
         super().__init__()
         self.current = None
@@ -310,11 +51,11 @@ class basePlayer(ABC):
    def __init__(self):
       pass
    
-   def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth):
+   def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth): #allows for player moves to be made
       Temp_Board = numpy.copy(Board) #just for the undo function
       Updated = False
       if not (CPU and Turn == 2):
-        if Size == 15:
+        if Size == 15: #calculate what position in the board is being selected for player moves
           if x % 35 <= 10:
             XIndex = math.floor(x/35)
           elif x % 35 >= 20:
@@ -335,38 +76,38 @@ class basePlayer(ABC):
             YIndex = math.floor(y/30)
           elif y % 30 >= 20:
             YIndex = math.ceil(y/38)
-      else:
+      else: #CPU directly enters coordinates, so skip calculation
          XIndex = x
          YIndex = y
 
       if Board[XIndex][YIndex] == ' ':
-        if Turn == 1:
+        if Turn == 1: #standardise which player is which piece, simply differentiates between the two
             Board[XIndex][YIndex] = 'X'
         else:
             Board[XIndex][YIndex] = 'O'  
-        Game.Update_Board(Turn, XIndex, YIndex)
-        HeatMap = Update_HeatMap(HeatMap, [XIndex, YIndex], HeatTruth)
-        Line_Check = Game.Win_Check(Board, Size)
-        Updated = True 
+        Game.Update_Board(Turn, XIndex, YIndex) #update screen wtith move
+        HeatMap = Minimax.Update_HeatMap(HeatMap, [XIndex, YIndex], HeatTruth) #ensure the heatmap is accurate
+        Line_Check = Game.Win_Check(Board, Size) #check is someone has won
+        Updated = True #screen has been updated, used to determine if Ai should make a move
         if Line_Check:
-          X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn)
+          X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn) #output winner
           return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier
-        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
-      return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, [140, 360, 1175, 1275], [650, 740, 510, 610], ['Rules', 'Undo'], 'GAME'
+        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn) #if no winner, switch to next turn
+      return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, [140, 360, 1175, 1275], [650, 740, 510, 610], ['Rules', 'Undo'], 'GAME' #return specific values here to avoid them being updated needlessly
    
    def Move_calc(self, Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth):
-        Updated = False
+        Updated = False #no valid move has been entered yet
         if Size == 15:
-            x = (mouse_pos[0]-610)
+            x = (mouse_pos[0]-610) #take mouse position and calculate if it is in the Board (based on the size of the board itself)
             y = (mouse_pos[1]-313)
-            if(x % 35 <= 10 or x % 35 >= 25) and (y % 35 <= 10 or y % 35 >= 25) and (-10 <= x <= 500 and -10 <= y <= 500):
+            if(x % 35 <= 10 or x % 35 >= 25) and (y % 35 <= 10 or y % 35 >= 25) and (-10 <= x <= 500 and -10 <= y <= 500): #if close enough to the position, make move
                 Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
-                Line_Check = Game.Win_Check(Board, Size)
+                Line_Check = Game.Win_Check(Board, Size) #recheck here to return
                 return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
-            else:
+            else: #otherwise, do nothing
                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
           
-        elif Size == 19:
+        elif Size == 19: #exact same with slightly different calculations
             x = (mouse_pos[0]-580)
             y = (mouse_pos[1]-290)
             if (x % 30 <= 10 or x % 30 >= 20) and (y % 30 <= 10 or y % 30 >= 20) and (-10 <= x <= 600 and -10<= y <+ 600):
@@ -390,8 +131,8 @@ class Drawing():
   def __init__(self):
       pass
    
-  def Main_Menu():
-      for i in range (5):
+  def Main_Menu(): #draw main menu
+      for i in range (5): #iteration here is easier + saves extra lines in main program
         pygame.draw.rect(screen, WHITE, (MAIN_MENU_RECT[i]), 4)
         pygame.display.flip()
         
@@ -422,16 +163,15 @@ class Drawing():
       pygame.display.flip()
       
       #formula of coords is 2i (for less extreme) and 2i+1 (for more extreme) for i>=0
-      X_LIST = [395, 1045, 445, 995, 590, 850]
-      Y_LIST = [270, 370, 420, 520, 600, 700]
+      X_LIST = [395, 1045, 445, 995, 590, 850] #button lists line up with coordinate lists
+      Y_LIST = [270, 370, 420, 520, 600, 700] #e.g. 'Rules' button has x values 590, 850 here
       BUTTON_LIST = ['AI_opponent','Player_name', 'Rules']
-      Identifier = 'MENU'
+      Identifier = 'MENU' #current screen
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Rules(temp):
-      Redraw = False
-      Prev = ''
-      for i in range (5):
+  def Rules(temp): #draw rules screen
+      Prev = '' #prev used to determine if game state needs to be redrawn
+      for i in range (3):
         pygame.draw.rect(screen, WHITE, (RULES_RECT[i]), 4)
         pygame.display.flip()
 
@@ -440,81 +180,65 @@ class Drawing():
       RulesRect0.center = (180, 50)
       screen.blit(RULEST0, RulesRect0)
       
-      RULEST1 = FONT53.render('   Gomoku is played on a 15x15 ', True, BLACK)
+      RULEST1 = FONT55.render('•   Gomoku is played on either a 15 x 15 or 19 x 19 square board', True, BLACK)
       RulesRect1 = RULEST1.get_rect()
-      RulesRect1.center = (345, 200)
+      RulesRect1.center = (720, 220)
       screen.blit(RULEST1, RulesRect1)
       
-      RULEST2 = FONT53.render('board. ', True, BLACK)
+      RULEST2 = FONT55.render('•   The first player is random, and players alternate in placing a', True, BLACK)
       RulesRect2 = RULEST2.get_rect()
-      RulesRect2.center = (125, 240)
+      RulesRect2.center = (720, 325)
       screen.blit(RULEST2, RulesRect2)
       
-      RULEST3 = FONT53.render('   Black plays first, and players ', True, BLACK)
+      RULEST3 = FONT55.render('stone of their colour on an empty intersection. ', True, BLACK)
       RulesRect3 = RULEST3.get_rect()
-      RulesRect3.center = (345, 315)
+      RulesRect3.center = (720, 365)
       screen.blit(RULEST3, RulesRect3)
       
-      RULEST4 = FONT53.render('alternate in placing a stone of their ', True, BLACK)
+      RULEST4 = FONT55.render('•   The winner is the first player to form an unbroken chain of', True, BLACK)
       RulesRect4 = RULEST4.get_rect()
-      RulesRect4.center = (375, 355)
+      RulesRect4.center = (720, 470)
       screen.blit(RULEST4, RulesRect4)
       
-      RULEST5 = FONT53.render('colour on an empty intersection. ', True, BLACK)
+      RULEST5 = FONT55.render('five stones horizontally, vertically, or diagonally. ', True, BLACK)
       RulesRect5 = RULEST5.get_rect()
-      RulesRect5.center = (351, 395)
+      RulesRect5.center = (720, 510)
       screen.blit(RULEST5, RulesRect5)
-      
-      RULEST6 = FONT53.render('   The winner is the first player to ', True, BLACK)
+
+      RULEST6 = FONT55.render('•   Once placed, stones cannot be moved or removed from the', True, BLACK)
       RulesRect6 = RULEST6.get_rect()
-      RulesRect6.center = (360, 470)
+      RulesRect6.center = (720, 615)
       screen.blit(RULEST6, RulesRect6)
       
-      RULEST7 = FONT53.render('form an unbroken chain of five ', True, BLACK)
-      RulesRect7 = RULEST7.get_rect()
-      RulesRect7.center = (334, 510)
-      screen.blit(RULEST7, RulesRect7)
-      
-      RULEST8 = FONT53.render('stones horizontally, vertically, or ', True, BLACK)
-      RulesRect8 = RULEST8.get_rect()
-      RulesRect8.center = (350, 550)
-      screen.blit(RULEST8, RulesRect8)
-      
-      RULEST9 = FONT53.render('diagonally. ', True, BLACK)
-      RulesRect9 = RULEST9.get_rect()
-      RulesRect9.center = (160, 590)
-      screen.blit(RULEST9, RulesRect9)
-      
-      RULEST10 = FONT53.render('   Once placed, stones cannot be ', True, BLACK)
-      RulesRect10 = RULEST10.get_rect()
-      RulesRect10.center = (355, 665)
-      screen.blit(RULEST10, RulesRect10)
-      
-      RULEST11 = FONT53.render('moved or removed from the board. ', True, BLACK)
-      RulesRect11 = RULEST11.get_rect()
-      RulesRect11.center = (365, 715)
-      screen.blit(RULEST11, RulesRect11)
+      RULEST6 = FONT55.render('board, however moves can be undone once per turn', True, BLACK)
+      RulesRect6 = RULEST6.get_rect()
+      RulesRect6.center = (720, 655)
+      screen.blit(RULEST6, RulesRect6)
     
-      RULEST12 = FONT100.render('Return', True, BLACK)
-      RulesRect12 = RULEST12.get_rect()
-      RulesRect12.center = (1320, 850)
-      screen.blit(RULEST12, RulesRect12)
+      RULEST7 = FONT55.render('within this program' , True, BLACK)
+      RulesRect7 = RULEST7.get_rect()
+      RulesRect7.center = (720, 695)
+      screen.blit(RULEST7, RulesRect7)
+
+      RULEST8 = FONT100.render('Return', True, BLACK)
+      RulesRect8 = RULEST8.get_rect()
+      RulesRect8.center = (1310, 850)
+      screen.blit(RULEST8, RulesRect8)
       pygame.display.flip()
       
       X_LIST = [1200, 1440]
       Y_LIST = [800, 900]
       BUTTON_LIST = [temp]
       Identifier = 'RULES'
-      if temp == 'GAME':
-         Redraw = True
-         Prev = Rules
-      return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Redraw, Prev
+      if temp == 'GAME': #if page to return to is the game, update prev to redraw board
+         Prev = 'Rules'
+      return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Prev
 
-  def P1_Name():
+  def P1_Name(): #draw screen to get player one name
       pygame.draw.rect(screen, (SCREEN_COLOUR),(380, 235, 680, 540), 0)
       pygame.draw.rect(screen, WHITE, (380, 235, 680, 430), 4)
      
-      TextInputGroup.add(TextInput(x=605, y=440, width = 230))
+      TextInputGroup.add(TextInput(x=605, y=440, width = 230)) #create textbox to enter name into
       pygame.display.flip()
      
       for i in range (3):
@@ -537,16 +261,16 @@ class Drawing():
       screen.blit(NAMEST2, NAMESRect2)
       pygame.display.flip()
       
-      #no buttons, only inputs - requires change of enter key code
+      #no buttons, only inputs, hence lists empty (can't be ignored as that would result in lists from other screens carrying over)
       Identifier = 'NAMES'
       X_LIST = []
       Y_LIST = []
       BUTTON_LIST = []
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def P2_Name():
+  def P2_Name(): #draw screen for player 2 name
       for current in TextInputGroup:
-          TextInputGroup.remove(current)
+          TextInputGroup.remove(current) #get rid of old textbox
      
       pygame.draw.rect(screen, (SCREEN_COLOUR),(540, 360, 360, 70), 0)
       pygame.draw.rect(screen, WHITE, (540, 360, 360, 70), 4)
@@ -563,12 +287,12 @@ class Drawing():
       Identifier = 'P2'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Main_Program():
+  def Main_Program(): #draw bulk of the main game screen
       for i in range (5):
           pygame.draw.rect(screen, WHITE, MAIN_PROG_RECT[i], 4)
           pygame.display.flip()
 
-      MAINT0 = FONT50.render('Player 1s score: ' + str(P1SCORE), True, BLACK)
+      MAINT0 = FONT50.render('Player 1s score: ' + str(P1SCORE), True, BLACK) #update player scores
       MAINRect0 = MAINT0.get_rect()
       MAINRect0.center = (225, 390)
       screen.blit(MAINT0, MAINRect0)
@@ -590,10 +314,10 @@ class Drawing():
       Identifier = 'MAIN'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Board_Size():
+  def Board_Size(): #draw screen to get baord size
       X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program()
       for current in TextInputGroup:
-          TextInputGroup.remove(current)
+          TextInputGroup.remove(current) #ensure no textboxes carry over from player names
      
       pygame.draw.rect(screen, SCREEN_COLOUR, (600, 400, 650, 340), 0)
       pygame.draw.rect(screen, WHITE, (600, 400, 650, 340), 4)
@@ -630,32 +354,32 @@ class Drawing():
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
   def Clean():
-     screen.fill(SCREEN_COLOUR)
+     screen.fill(SCREEN_COLOUR) #covers screen in background colour to reset it
 
-  def Fail(error):
+  def Fail(error): #only used in player name get
       pygame.draw.rect(screen, (SCREEN_COLOUR), (450, 530, 540, 80), 0)
       pygame.draw.rect(screen, (WHITE), (415, 530, 610, 80), 4)
       pygame.display.flip()
       
-      if error == 'Name':
+      if error == 'Name': #error if names are the same
         FAILT0 = FONT55.render('ERROR: player name are same', True, BLACK)
         FAILRect0 = FAILT0.get_rect()
         FAILRect0.center = (720, 570)
         screen.blit(FAILT0, FAILRect0)
    
-      elif error == 'Empty':
+      elif error == 'Empty': #error if nothing is entered as a name
         FAILT1 = FONT55.render('ERROR: Invalid input', True, BLACK)
         FAILRect1 = FAILT1.get_rect()
         FAILRect1.center = (720, 570)
         screen.blit(FAILT1, FAILRect1)
       pygame.display.flip()
    
-  def Game(Size):
-    Size = int(Size)
+  def Game(Size): #draw main game (mostly board)
+    Size = int(Size) #update size to be an int for future use
     pygame.draw.rect(screen, SCREEN_COLOUR, (500, 260, 900, 600), 0)
     pygame.draw.rect(screen, WHITE, (500, 260, 900, 585), 4)
     
-    if Size == 15:
+    if Size == 15: #exact dimensions of board change with size to fit in better
         for i in range (14):
             for j in range (14):
                 pygame.draw.rect(screen, WHITE, ((610+35*i), (313+35*j), 35, 35), 1)
@@ -681,28 +405,26 @@ class Drawing():
         screen.blit(GAMET1, GAMERect1)
         pygame.display.flip
     
-    for Count1 in range (Size):
+    for Count1 in range (Size): #create 2D array for Board
         BoardRow = []
         for Count2 in range (Size):
             BoardPosition = ' '
             BoardRow.append(BoardPosition)
         Board.append(BoardRow)
 
-    for Count1 in range (Size):
+    for Count1 in range (Size): #ceate 2D array for heatmap
         HeatRow = []
         for Count2 in range (Size):
             HeatValue = 0
             HeatRow.append(HeatValue)
         HeatMap.append(HeatRow)
  
-    for Count1 in range (Size):
+    for Count1 in range (Size): #create 2D array to check if heat value has been updated already
         TruthRow = []
         for Count2 in range (Size):
             HeatBool = False
             TruthRow.append(HeatBool)
         HeatTruth.append(TruthRow)
-    
-    BoardScore = Game.get_BoardScore(Size)
 
     X_LIST = [140, 360, 1175, 1275]
     Y_LIST = [650, 740, 510, 610]
@@ -710,7 +432,7 @@ class Drawing():
     Identifier = 'GAME'
     return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size
   
-  def Winner(Turn):
+  def Winner(Turn): #if someone wins, output who it was
       pygame.draw.rect(screen, SCREEN_COLOUR, (600, 380, 510, 340), 0)
       pygame.draw.rect(screen, WHITE, (600, 380, 510, 340), 4)
       pygame.draw.rect(screen, WHITE, (770, 565, 180, 70), 4)
@@ -736,57 +458,64 @@ class Game():
     def __init__(self):
        pass
 
-    def Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev):  
-      if Next == 'AI_opponent':
-         Drawing.Clean()
-         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
+    def Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev): #send players down pre-determined set of screens based on choices  
+      if Next == 'AI_opponent': #if player chooses 'Play vs Computer' on main screen
+        Drawing.Clean()
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
 
-      elif Next == 'Player_name':
+      elif Next == 'Player_name': #if player chooses 'Play vs Human' on main screen
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.P1_Name()
         
-      elif Next == '15' or Next == '19':
+      elif Next == '15' or Next == '19': #any time where board size has been chosen
         Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Next)
         
-      elif Next == 'MENU':
-        Drawing.Clean()
-        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu()
+      #elif Next == 'MENU':
+       # Drawing.Clean()
+       # X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu()
     
-      elif Next == 'Undo':
-         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn = Game.Undo_Move(Size, Board, Temp_Board, Turn_count, Turn)
+      elif Next == 'Undo': #if player chooses to undo a move
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn = Game.Undo_Move(Size, Board, Temp_Board, Turn_count, Turn)
       
-      if Prev == 'Rules' and Next == 'GAME':
-        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Next)
-        if Size == 15:
-                            for i in range (Size):
-                                for j in range (Size):
-                                    if Board[i][j] == 'X':
-                                      pygame.draw.circle(screen, P1COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
-                                      pygame.display.flip()
-                                    elif Board[i][j] == 'O':
-                                      pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
-                                      pygame.display.flip()
-                           elif Size == 19:
-                            for i in range (Size):
-                                for j in range (Size):
-                                    if Board[i][j] == 'X':
-                                      pygame.draw.circle(screen, P1COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
-                                      pygame.display.flip()
-                                    elif Board[i][j] == 'O':
-                                      pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
-                                      pygame.display.flip()
+      elif Next == 'Rules': #if player chooses to view rules on any screen
+        Drawing.Clean()
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Prev = Drawing.Rules(temp)
 
-      else:
+      elif Prev == 'Rules' and Next == 'GAME': #if returning from rules to running game
+        Drawing.Clean()
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
+        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
+        if Size == 15:
+            for i in range (Size):
+                for j in range (Size): #redraw current Board state, exact positions differ with board size
+                    if Board[i][j] == 'X':
+                        pygame.draw.circle(screen, P1COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
+                        pygame.display.flip()
+                    elif Board[i][j] == 'O':
+                        pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
+                        pygame.display.flip()
+        elif Size == 19:
+            for i in range (Size):
+                for j in range (Size):
+                    if Board[i][j] == 'X':
+                        pygame.draw.circle(screen, P1COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
+                        pygame.display.flip()
+                    elif Board[i][j] == 'O':
+                        pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
+                        pygame.display.flip()
+        Prev = '' #reset Prev to allow for rules to be re-visited
+
+      else: #if no other check works, next screen must be finding board size
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
         
-      return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU
+      return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU, Prev #return all relevant potentially updated values
 
     def Undo_Move(Size, Board, Temp_Board, Turn_Count, Turn):
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
         Board = []
         
-        for Count1 in range (Size):
+        for Count1 in range (Size): #updated board to previous position via Temp_Board
             BoardRow = []
             for Count2 in range (Size):
                 if Temp_Board[Count1][Count2] == 'O':
@@ -798,8 +527,8 @@ class Game():
                 BoardRow.append(BoardPosition)
             Board.append(BoardRow)
             
-        Turn_Count, Turn = Game.Player_Turn (Turn_count, Turn)
-        if Size == 15:
+        Turn = Game.Player_Turn (Turn_count, Turn)[1] #set Turn back to previous value
+        if Size == 15: #redraw Board based on previous Board state
             for i in range (Size):
                 for j in range (Size):
                     if Temp_Board[i][j] == 'X':
@@ -821,20 +550,20 @@ class Game():
       
     def Player_Turn (Turn_count, Turn):
       if Turn_count == 0 and not CPU:
-        if random.randint(0,1) == 1:  
+        if random.randint(0,1) == 1:  #random starting player
           Turn = 1
         else:
             Turn = 2
-      elif Turn_count == 0 and CPU:
+      elif Turn_count == 0 and CPU: #if CPU player, human always goes first
           Turn = 1
       else:
-        if Turn == 1:
+        if Turn == 1: #alternate turns
             Turn = 2
         elif Turn == 2:
             Turn = 1
       Turn_count += 1
 
-      pygame.draw.rect(screen, SCREEN_COLOUR, (650, 115, 550, 90), 0)
+      pygame.draw.rect(screen, SCREEN_COLOUR, (650, 115, 550, 90), 0) #updated text box displaying current turn
       TURNT0 = FONT75.render('Player ' + str(Turn)  + 's turn: ', True, BLACK)
       TURNRect0 = TURNT0.get_rect()
       TURNRect0.center = (925, 155)
@@ -844,12 +573,12 @@ class Game():
       return Turn_count, Turn
 
     def Update_Board(Turn, XIndex, YIndex):
-      if Turn == 1:
+      if Turn == 1: #determine which player is moving, and what colour piece to place
         Colour = P1COLOUR
       else:
         Colour = P2COLOUR
         
-      if Size == 15:
+      if Size == 15: #place piece in chosen position, dimensions etc change with Board Size
         pygame.draw.circle(screen, Colour, (XIndex*35 + 610, YIndex* 35 + 313), 15, 0)
       else:
         pygame.draw.circle(screen, Colour, (XIndex*30 + 580, YIndex* 30 + 290), 12, 0)
@@ -858,7 +587,7 @@ class Game():
     def Win_Check(Board, Size):
       for x in range (0, Size):
         for y in range (0, Size):
-            try:
+            try: #iterate through full board, if 5 in a row found, return True and end game
               if Board[x-2][y] == Board[x-1][y] == Board[x][y] == Board[x+1][y] == Board [x+2][y] != ' ':
                 return True
             except:
@@ -884,37 +613,286 @@ class Game():
       return False
     
     def Check_Draw(Board, Size):
-      for x in range (Size):
+      for x in range (Size): #if no possible moves left (no empty spaces in Board) draw is True
         for y in range (Size):
           if Board[x][y] == ' ':
              return False
       return True
 
-TextInputGroup = CustomGroup()
+class Minimax():
+   def __init__(self):
+       pass
+   
+    #Minimax algorithm with Alpha beta Pruning for finding the best move on the game board.
+   
+   def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
+        valid_locations = Minimax.GetAvailableMoves(Size)
+        if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
+            is_terminal = True
+        else: is_terminal = False
+
+        #if depth is 0 or game ends, return score
+        if depth == 0 or is_terminal:
+            if is_terminal:
+                if Game.Win_Check(Board, Size):
+                    return (None, (1000000000 + depth) * (1 if maximisingPlayer else -1))
+                else: #game tied, no moves left
+                    return (None, 0)
+            else: #depth is zero
+                return (None, Minimax.Score_calc(Board, True) - Minimax.Score_calc(Board, False))
+        
+        Player_symbol = 'O' if maximisingPlayer else 'X'
+        #maximizing player
+        if maximisingPlayer:
+            value = float('-inf')
+            Best_move = [-1, -1]
+            for move in valid_locations:
+                Board[move[0]][move[1]] = Player_symbol
+                if Game.Win_Check(Board, Size):
+                    new_score = Minimax.Ai_Move(Board, depth, alpha, beta, True)[1]
+                else:
+                    new_score = Minimax.Ai_Move(Board, depth-1, alpha, beta, False)[1]
+                Board[move[0]][move[1]] = ' '
+    
+                #update move and alpha
+                if new_score > value:
+                    value = new_score
+                    Best_move = move
+                alpha = max((alpha, value))
+    
+                #prune search
+                if alpha >= beta:
+                    break
+            return Best_move, value
+    
+        else: #minimizing player
+            value = float('inf')
+            Best_move = [-1, -1]
+            for move in valid_locations:
+                Board[move[0]][move[1]] = Player_symbol
+                if Game.Win_Check(Board, Size):
+                    new_score = Minimax.Ai_Move(Board, depth, alpha, beta, False)[1]
+                else:
+                    new_score = Minimax.Ai_Move(Board, depth-1, alpha, beta, True)[1]
+                Board[move[0]][move[1]] = ' '
+    
+                #update move and alpha
+                if new_score < value:
+                    value = new_score
+                    Best_move = move
+                beta = min((beta, value))
+    
+                #prune search
+                if alpha >= beta:
+                    break
+            return Best_move, value
+    
+   def Open_row_search(Piece):
+        best = 0
+        #horizontal count
+        for x in range (1, Size-4):
+            for y in range (Size):
+                    if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
+                        if Board[x-1][y] == Board[x+3][y] == ' ':
+                            best += 10 #three in a row (unblocked)
+                        elif Board[x+3][y] == Piece:
+                            best += 1000 #four in a row
+                            if Board[x-1][y] == Board[x+4][y] == ' ':
+                                best += 10000 #four in a row unblocked (guarantees win)
+
+        #vertical count
+        for x in range (Size):
+            for y in range (1, Size-4):
+                    if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
+                        if Board[x][y-1] == Board[x][y+3] == ' ':
+                            best += 10 #three in a row (unblocked)
+                        elif Board[x][y+3] == Piece:
+                            best += 1000 #four in a row
+                            if Board[x][y-1] == Board[x][y+4] == ' ':
+                                best += 10000 #four in a row unblocked (guarantees win)
+
+        #left diagonal count
+        for x in range (1, Size-4):
+            for y in range (1, Size-4):
+                    if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
+                        if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
+                            best += 10 #three in a row (unblocked)
+                        elif Board[x+3][y+3] == Piece:
+                            best += 1000 #four in a row
+                            if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
+                                best += 10000 #four in a row unblocked (guarantees win)
+
+        #right diagonal count
+        for x in range (4, Size-1):
+            for y in range (1, Size-4):
+                    if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
+                        if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
+                            best += 10 #three in a row (unblocked)
+                        elif Board[x-3][y+3] == Piece:
+                            best += 1000 #four in a row
+                            if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
+                                best += 10000 #four in a row unblocked (guarantees win)
+        return best
+
+   def Score_calc(Board, Max_turn): 
+        Piece = 'O' if Max_turn else 'X' #determine which player's score is being counted
+        Opponent = 'X' if Max_turn else 'O'
+        best = 0
+        best += Minimax.Open_row_search(Piece) #check for high priority lines
+        #horizontal count
+        for x in range (1, Size-3):
+            for y in range (Size):
+                if Board[x][y] == Board[x+1][y] == Piece or Board[x][y] == Board[x+1][y] == Opponent:
+                    if Board[x+2][y] != Board[x][y]:
+                        if Board[x][y] == Piece:
+                            best += 1 #two in a row
+                            if Board[x-1][y] or Board[x+2][y] == Opponent:
+                                best -=1 #blocked
+                        else:
+                            best -= 1
+                            if Board[x-1][y] or Board[x+2][y] == Piece:
+                                best += 3 #hgih score prioritises blocking moves
+                    else:
+                        if Board[x][y] == Piece:
+                            best += 2 #three in a row
+                            if Board[x-1][y] or Board[x+3][y] == Opponent:
+                                best -=1
+                        else:
+                            best -= 2 #blocked
+                            if Board[x-1][y] or Board[x+3][y] == Piece:
+                                best += 5 #prioritise stopping opponents strong moves
+        #vertical count
+        for x in range (Size):
+            for y in range (1, Size-3):
+                if Board[x][y] == Board[x][y+1] == Piece or Board[x][y] == Opponent:
+                    if Board[x][y+2] != Board[x][y]:
+                        if Board[x][y] == Piece:
+                            best += 1
+                            if Board[x][y-1] or Board[x][y+2] == Opponent:
+                                best -=1
+                        else:
+                            best -= 1
+                            if Board[x][y-1] or Board[x][y+2] == Piece:
+                                best += 3
+                    else:
+                        if Board[x][y] == Piece:
+                            best += 2
+                            if Board[x][y-1] or Board[x][y+3] == Opponent:
+                                best -=1
+                        else:
+                            best -= 2
+                            if Board[x][y-1] or Board[x][y+3] == Piece:
+                                best += 5
+                #left diagonal count -x +y to +x -y
+        for x in range (1, Size-3):
+            for y in range (3, Size-1):
+                if Board[x][y] == Board[x+1][y-1] == Piece or Board[x][y] == Board[x+1][y-1] == Opponent:
+                    if Board[x+2][y-2] != Board[x][y]:
+                        if Board[x][y] == Piece:
+                            best += 1
+                            if Board[x-1][y+1] or Board[x+2][y-2] == Opponent:
+                                best -=1
+                        else:
+                            best -= 1
+                            if Board[x-1][y+1] or Board[x+2][y-2] == Piece:
+                                best += 3
+                    else:
+                        if Board[x][y] == Piece:
+                            best += 2
+                            if Board[x-1][y+1] or Board[x+3][y-3] == Opponent:
+                                best -=1
+                        else:
+                            best -= 2
+                            if Board[x-1][y+1] or Board[x+3][y-3] == Piece:
+                                best += 5
+                #right diagonal -x -y to +x +y
+        for x in range (1, Size-3):
+            for y in range (1, Size-3):
+                if Board[x][y] == Board[x+1][y] == Piece or Board[x][y] == Board[x+1][y] == Opponent:
+                    if Board[x+2][y+2] != Board[x][y]:
+                        if Board[x][y] == Piece:
+                            best += 1
+                            if Board[x-1][y-1] or Board[x+2][y+2] == Opponent:
+                                best -=1
+                        else:
+                            best -= 1
+                            if Board[x-1][y-1] or Board[x+2][y+2] == Piece:
+                                best += 3
+                    else:
+                        if Board[x][y] == Piece:
+                            best += 2
+                            if Board[x-1][y-1] or Board[x+3][y+3] == Opponent:
+                                best -=1
+                        else:
+                            best -= 2
+                            if Board[x-1][y-1] or Board[x+3][y+3] == Piece:
+                                best += 5
+        return best
+
+   def GetAvailableMoves(Size):
+        AvailableMoves = []
+        for i in range (Size):
+            for j in range (Size):
+                if Board[i][j] == ' ': #is move taken
+                    if HeatMap[i][j] > 0: #is move relevant to current gamestate
+                        AvailableMoves.append([i, j, HeatMap[i][j]])
+        AvailableMoves.sort(reverse=True, key = Minimax.get_Heat) #order moves on importance
+        return AvailableMoves
+
+   def Update_HeatMap(HeatMap, Move, HeatTruth):
+        Move_X = Move[0]
+        Move_Y = Move[1]
+        HeatMap[Move_X][Move_Y] = -1 #ignore taken spaces
+        for k in range (2): #create range around moves to update
+            X_pos = min((14, Move_X + k))
+            X_neg = max((0, Move_X - k))
+            Y_pos = min((14, Move_Y + k))
+            Y_neg = max((0, Move_Y - k))
+            #if space not taken, and heat value not updated already, increase heat
+            if HeatMap[X_pos][Y_pos] > -1 and not HeatTruth[X_pos][Y_pos]: HeatMap[X_pos][Y_pos] += 1; HeatTruth[X_pos][Y_pos] = True
+            if HeatMap[X_pos][Y_neg] > -1 and not HeatTruth[X_pos][Y_neg]: HeatMap[X_pos][Y_neg] += 1; HeatTruth[X_pos][Y_neg] = True
+            if HeatMap[X_neg][Y_pos] > -1 and not HeatTruth[X_neg][Y_pos]: HeatMap[X_neg][Y_pos] += 1; HeatTruth[X_neg][Y_pos] = True
+            if HeatMap[X_neg][Y_neg] > -1 and not HeatTruth[X_neg][Y_neg]: HeatMap[X_neg][Y_neg] += 1; HeatTruth[X_neg][Y_neg] = True
+        HeatTruth = Minimax.Reset_HeatTruth(HeatTruth) #reset to allow for updates later
+        return HeatMap
+ 
+   def Reset_HeatTruth(HeatTruth):
+        for i in range (Size):
+            for j in range (Size):
+                HeatTruth[i][j] = False
+        return HeatTruth #allows for updating heat again later on
+ 
+   def Reset_HeatMap(HeatMap):
+        for i in range (len(HeatMap)):
+            for j in range (len(HeatMap)):
+                HeatMap[i][j] = 0 #set heatmap to 0 for replays
+        return HeatMap
+ 
+   def get_Heat(list):
+        return list[2] #returns heat value only
+
+TextInputGroup = CustomGroup() #pre-define textboxes for later use
 TextInputList = []
 
-Player_1 = humanPlayer()
-Player_2 = humanPlayer()
-Ai_player = computerPlayer()
-
-X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu()
+X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu() #start program before gameplay loop
 
 while True:
     mouse_pos = pygame.mouse.get_pos()
-    if (AI_turn and Updated) == True:
-              Updated = False
-              Best_move, Max_score  = Ai_Move(Board, 3, float('-inf'), float('inf'), True)
-              Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth)
-              Board[Best_move[0]][Best_move[1]] = 'O'
-              AI_turn = False
+    if (AI_turn and Updated) == True: #run Ai calculation on every frame where it is the AI's turn, and the previous player move updated the board (two checks used for safety)
+              Updated = False #reset updated to allow human turn
+              Best_move, Max_score  = Minimax.Ai_Move(Board, 3, float('-inf'), float('inf'), True) #run minimax algorithm
+              Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = Ai_player.move(Turn, Turn_count, Board, Best_move[0], Best_move[1], Temp_Board, CPU, HeatMap, HeatTruth) #output calculated move
+              Board[Best_move[0]][Best_move[1]] = 'O' #update board with move
+              AI_turn = False #reset Ai_turn to allow human turn
 
     for event in pygame.event.get():
-        if event.type == pygame.quit:
+        if event.type == pygame.QUIT: #exit pygame
+            pygame.display.quit()
             pygame.quit()
             sys.exit()
            
         if event.type == pygame.MOUSEBUTTONDOWN:
-            for textinput in TextInputGroup:
+            for textinput in TextInputGroup: #if clicking on a textbox, allow for text input
                 if textinput.clicked(mouse_pos):
                     if TextInputGroup.current:
                         TextInputGroup.current.isSelected = False
@@ -922,118 +900,103 @@ while True:
                     TextInputGroup.current = textinput
                     break
                   
-            for i in range (int(len(X_LIST)/2)):
-                if (X_LIST[2*i] <= mouse_pos[0] <= X_LIST[2*i+1]) and (Y_LIST[2*i] <= mouse_pos[1] <= Y_LIST[2*i+1]):
-                     Next = BUTTON_LIST[i]
+            for i in range (0, len(BUTTON_LIST)): #iterate through possible buttons on a screen
+                if (X_LIST[2*i] <= mouse_pos[0] <= X_LIST[2*i+1]) and (Y_LIST[2*i] <= mouse_pos[1] <= Y_LIST[2*i+1]): #if mouse position is within the bounds of a button
+                     Next = BUTTON_LIST[i] #find button pressed
                      if Next == 'AI_opponent':
-                        Ai_player = computerPlayer()
-                        CPU = True
+                        Player_1 = humanPlayer() #create one human player
+                        Ai_player = computerPlayer() #create ai player
+                        CPU = True #set to true to allow AI moves to be made properly
                         
-                     if Next == 'Rules':
+                     if Next == 'Rules': #rules runs separately due to need to hold previous screen to return to
                         Drawing.Clean()
                         temp = Identifier
-                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Redraw, Prev = Drawing.Rules(temp)
-                        if Redraw:
-                           if Size == 15:
-                            for i in range (Size):
-                                for j in range (Size):
-                                    if Board[i][j] == 'X':
-                                      pygame.draw.circle(screen, P1COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
-                                      pygame.display.flip()
-                                    elif Board[i][j] == 'O':
-                                      pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
-                                      pygame.display.flip()
-                           elif Size == 19:
-                            for i in range (Size):
-                                for j in range (Size):
-                                    if Board[i][j] == 'X':
-                                      pygame.draw.circle(screen, P1COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
-                                      pygame.display.flip()
-                                    elif Board[i][j] == 'O':
-                                      pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
-                                      pygame.display.flip()
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Prev = Drawing.Rules(temp)
                         break
-                     elif Next == 'Replay':
-                        if Turn == 1:
+                     
+                     elif Next == 'Replay': #if replaying game, extra changes are needed hence made separately
+                        if Turn == 1: #update score based on who won
                             P1SCORE += 1
                         else:
                             P2SCORE += 1
-                        Drawing.Clean()
-                        Line_Check = False
+                        Drawing.Clean() #reset screen
+                        Line_Check = False #reset variables that have been changed and will need to be emptied/ returned to default
                         Board = []
                         HeatMap = []
                         HeatTruth = []
                         Turn_count = 0
                         if CPU:
-                           AI_turn = False
+                           AI_turn = False #ensure Ai cannot move first if playing aganst it
                            Updated = False
-                        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
-                        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program()
+                        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn) #create starting player
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program() #redraw all key parts of game screen
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
                         break
-                     else:
-                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU = Game.Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev)
+                     else: #otherwise go through pre-determined steps through menus
+                        X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU, Prev = Game.Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev)
                         break
 
-            if not Line_Check:
+            if not Line_Check: #if game still going
               Updated = False
-              if Identifier == 'GAME' and CPU:
+              if Identifier == 'GAME' and CPU: #if ai player, make human move
                  if Turn == 1:
                     X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap = Player_1.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth)
 
                     if not Line_Check: AI_turn = True
 
-              elif Identifier == 'GAME' and not CPU:
-                 if Turn == 1:
+              elif Identifier == 'GAME' and not CPU: #if no ai player
+                 if Turn == 1: #make player move for the correct player
                     X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap = Player_1.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth)
                  elif Turn == 2:
                     X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap = Player_2.Move_calc(Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth)
                 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
+        if event.type == pygame.KEYDOWN: #if entering text
+            if event.key == pygame.K_BACKSPACE: #delete text
                 TextInputGroup.current.update_text(TextInputGroup.current.text_value[:-1])
                 
-            if event.key == pygame.K_RETURN:
+            if event.key == pygame.K_RETURN: #take text as an input
                 if TextInputGroup.current:
                     TextInputList.append(TextInputGroup.current.text_value)
 
-                    if TextInputGroup.current.text_value != '':
-                        if Identifier == 'NAMES':
-                            Player_1 = humanPlayer()
-                            X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.P2_Name()
+                    if TextInputGroup.current.text_value != '': #if text entered
+                        if Identifier == 'NAMES': #if player one name was just gotten
+                            Player_1 = humanPlayer() #create player
+                            X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.P2_Name() #get player two name
 
-                        elif TextInputGroup.current.text_value != TextInputList[0]:
-                            Player_2 = humanPlayer()
+                        elif TextInputGroup.current.text_value != TextInputList[0]: #fi player two name entered and not the same as P1
+                            Player_2 = humanPlayer() #create player
                             TextInputList.append(TextInputGroup.current.text_value)
                             Drawing.Clean()
-                            X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
+                            X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size() #move to getting board size
                         else:
-                            Drawing.Fail('Name')
+                            Drawing.Fail('Name') #if name are same, output error
                     else:
-                       Drawing.Fail('Empty')
+                       Drawing.Fail('Empty') #if no name entered, output error
 
-        if event.type == pygame.USEREVENT: 
+        if event.type == pygame.USEREVENT:  #constantly updated timer
           if Identifier == 'GAME':
             Seconds += 1
-            if Seconds == 60:
+            if Seconds == 60: #if minute passes, update timer as such
               Minutes += 1
               Seconds = 0
-          else:
+          elif Identifier == 'RULES':
+              pass #if in rules, pause timer
+          else: #if not in a game actively, reset timer
             Seconds = 0
             Minutes = 0
                 
-        if event.type == pygame.TEXTINPUT:
+        if event.type == pygame.TEXTINPUT: #update text if needed
             Current_text = TextInputGroup.current.update_text(TextInputGroup.current.text_value + event.text)
     for textinput in TextInputGroup:
         textinput.update(mouse_pos)
         textinput.render(screen)
     if TextInputGroup.current and TextInputGroup.current.bg.collidepoint(mouse_pos):
-        pygame.mouse.set_cursor(ibeam)
+        pygame.mouse.set_cursor(ibeam) #if typing, change cursor type
     else:
-        pygame.mouse.set_cursor(pygame.cursors.Cursor())
+        pygame.mouse.set_cursor(pygame.cursors.Cursor()) #otherwise use default
         
-    if Identifier == 'GAME':
-      pygame.draw.rect(screen, SCREEN_COLOUR, (120, 150, 260, 50), 0)
+    if Identifier == 'GAME': #constantly update output timer
+      pygame.draw.rect(screen, SCREEN_COLOUR, (95, 150, 290, 50), 0)
       MAINT0 = FONT75.render('Timer: ' + str(Minutes) + ':' + str(Seconds), True, BLACK)
       MAINRect0 = MAINT0.get_rect()
       MAINRect0.center = (235, 175)
