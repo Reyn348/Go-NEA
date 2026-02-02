@@ -362,7 +362,7 @@ class Drawing():
       pygame.display.flip()
       
       if error == 'Name': #error if names are the same
-        FAILT0 = FONT55.render('ERROR: player name are same', True, BLACK)
+        FAILT0 = FONT55.render('ERROR: player names are same', True, BLACK)
         FAILRect0 = FAILT0.get_rect()
         FAILRect0.center = (720, 570)
         screen.blit(FAILT0, FAILRect0)
