@@ -116,7 +116,9 @@ class basePlayer(ABC):
                 return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
             else:
                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
-   
+
+#classes are mainly used as a convenience for grouping functions and differentiating objects, the following classes and functions in them rely on global variables
+#as such using a self list in these classes would be more inconvenient than not, which is why the inits are empty
 class humanPlayer(basePlayer):
   def __init__(self):
       super().__init__()
@@ -876,7 +878,7 @@ TextInputList = []
 
 X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu() #start program before gameplay loop
 
-while True:
+while True: #main game loop
     mouse_pos = pygame.mouse.get_pos()
     if (AI_turn and Updated) == True: #run Ai calculation on every frame where it is the AI's turn, and the previous player move updated the board (two checks used for safety)
               Updated = False #reset updated to allow human turn
