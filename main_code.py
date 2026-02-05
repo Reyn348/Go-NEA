@@ -6,38 +6,38 @@ import numpy
 from abc import ABC
 
 class TextInput(pygame.sprite.Sprite):
-    def __init__(self, x, y, width=100, height=50, color= BLACK, bgcolor=WHITE, selectedColor=(190,195,198)):
+    def __init__(self, x, y, Width=100, Height=50, Colour= BLACK, bgcolour=WHITE, SelectedColour=(190,195,198)):
         super().__init__()
-        self.text_value = ''
-        self.isSelected = False
-        self.color = color
-        self.bgcolor = bgcolor
-        self.selectedColor = selectedColor
-        self.font = FONT40
-        self.text = self.font.render(self.text_value, True, self.color)
-        self.bg = pygame.Rect(x, y, width, height)
+        self.Text_value = ''
+        self.Selected = False
+        self.Colour = Colour
+        self.bgcolour = bgcolour
+        self.SelectedColor = SelectedColour
+        self.Font = FONT40
+        self.Text = self.Font.render(self.Text_value, True, self.Colour)
+        self.bg = pygame.Rect(x, y, Width, Height)
        
     def clicked(self, mousePos): #determine if textbox has been selected
         if self.bg.collidepoint(mousePos):
-            self.isSelected = not(self.isSelected)
+            self.Selected = not(self.Selected)
             return True
         return False
        
     def update_text(self, new_text): #change text as it is entered
-        temp = self.font.render(new_text, True, self.color)
+        temp = self.Font.render(new_text, True, self.Colour)
         if temp.get_rect().width >= (self.bg.width - 20):
             return
-        self.text_value = new_text
-        self.text = temp
-        return self.text_value
+        self.Text_value = new_text
+        self.Text = temp
+        return self.Text_value
        
     def render(self, display): #output text onto sreen
-        self.pos = self.text.get_rect(center = (self.bg.x + self.bg.width/2, self.bg.y + self.bg.height/2))
-        if self.isSelected:
-            pygame.draw.rect(display, self.selectedColor, self.bg)
+        self.pos = self.Text.get_rect(center = (self.bg.x + self.bg.width/2, self.bg.y + self.bg.height/2))
+        if self.Selected:
+            pygame.draw.rect(display, self.SelectedColor, self.bg)
         else:
-            pygame.draw.rect(display, self.bgcolor, self.bg)
-        display.blit(self.text, self.pos)
+            pygame.draw.rect(display, self.bgcolour, self.bg)
+        display.blit(self.Text, self.pos)
        
 class CustomGroup(pygame.sprite.Group): #allow for textboxes to be made with ease
     def __init__(self):
@@ -54,6 +54,7 @@ class basePlayer(ABC):
    def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth): #allows for player moves to be made
       Temp_Board = numpy.copy(Board) #just for the undo function
       Updated = False
+
       if not (CPU and Turn == 2):
         if Size == 15: #calculate what position in the board is being selected for player moves
           if x % 35 <= 10:
@@ -76,6 +77,7 @@ class basePlayer(ABC):
             YIndex = math.floor(y/30)
           elif y % 30 >= 20:
             YIndex = math.ceil(y/38)
+
       else: #CPU directly enters coordinates, so skip calculation
          XIndex = x
          YIndex = y
@@ -85,18 +87,22 @@ class basePlayer(ABC):
             Board[XIndex][YIndex] = 'X'
         else:
             Board[XIndex][YIndex] = 'O'  
+
         Game.Update_Board(Turn, XIndex, YIndex) #update screen wtith move
         HeatMap = Minimax.Update_HeatMap(HeatMap, [XIndex, YIndex], HeatTruth) #ensure the heatmap is accurate
         Line_Check = Game.Win_Check(Board, Size) #check is someone has won
         Updated = True #screen has been updated, used to determine if Ai should make a move
+
         if Line_Check:
           X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn) #output winner
           return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier
+        
         Turn_count, Turn = Game.Player_Turn(Turn_count, Turn) #if no winner, switch to next turn
       return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, [140, 360, 1175, 1275], [650, 740, 510, 610], ['Rules', 'Undo'], 'GAME' #return specific values here to avoid them being updated needlessly
    
    def Move_calc(self, Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth):
         Updated = False #no valid move has been entered yet
+
         if Size == 15:
             x = (mouse_pos[0]-610) #take mouse position and calculate if it is in the Board (based on the size of the board itself)
             y = (mouse_pos[1]-313)
@@ -104,6 +110,7 @@ class basePlayer(ABC):
                 Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
                 Line_Check = Game.Win_Check(Board, Size) #recheck here to return
                 return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
+            
             else: #otherwise, do nothing
                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
           
@@ -114,6 +121,7 @@ class basePlayer(ABC):
                 Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
                 Line_Check = Game.Win_Check(Board, Size)
                 return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
+            
             else:
                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
 
@@ -133,7 +141,7 @@ class Drawing():
   def __init__(self):
       pass
    
-  def Main_Menu(): #draw main menu
+  def Main_Menu(self): #draw main menu
       for i in range (5): #iteration here is easier + saves extra lines in main program
         pygame.draw.rect(screen, WHITE, (MAIN_MENU_RECT[i]), 4)
         pygame.display.flip()
@@ -171,7 +179,7 @@ class Drawing():
       Identifier = 'MENU' #current screen
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Rules(temp): #draw rules screen
+  def Rules(self, temp): #draw rules screen
       Prev = '' #prev used to determine if game state needs to be redrawn
       for i in range (3):
         pygame.draw.rect(screen, WHITE, (RULES_RECT[i]), 4)
@@ -236,7 +244,7 @@ class Drawing():
          Prev = 'Rules'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Prev
 
-  def P1_Name(): #draw screen to get player one name
+  def P1_Name(self): #draw screen to get player one name
       pygame.draw.rect(screen, (SCREEN_COLOUR),(380, 235, 680, 540), 0)
       pygame.draw.rect(screen, WHITE, (380, 235, 680, 430), 4)
      
@@ -270,7 +278,7 @@ class Drawing():
       BUTTON_LIST = []
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def P2_Name(): #draw screen for player 2 name
+  def P2_Name(self): #draw screen for player 2 name
       for current in TextInputGroup:
           TextInputGroup.remove(current) #get rid of old textbox
      
@@ -289,7 +297,7 @@ class Drawing():
       Identifier = 'P2'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Main_Program(): #draw bulk of the main game screen
+  def Main_Program(self): #draw bulk of the main game screen
       for i in range (5):
           pygame.draw.rect(screen, WHITE, MAIN_PROG_RECT[i], 4)
           pygame.display.flip()
@@ -316,7 +324,7 @@ class Drawing():
       Identifier = 'MAIN'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Board_Size(): #draw screen to get baord size
+  def Board_Size(self): #draw screen to get baord size
       X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program()
       for current in TextInputGroup:
           TextInputGroup.remove(current) #ensure no textboxes carry over from player names
@@ -355,10 +363,10 @@ class Drawing():
       Identifier = 'BOARD_SIZE'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Clean():
+  def Clean(self):
      screen.fill(SCREEN_COLOUR) #covers screen in background colour to reset it
 
-  def Fail(error): #only used in player name get
+  def Fail(self, error): #only used in player name get
       pygame.draw.rect(screen, (SCREEN_COLOUR), (450, 530, 540, 80), 0)
       pygame.draw.rect(screen, (WHITE), (415, 530, 610, 80), 4)
       pygame.display.flip()
@@ -376,7 +384,7 @@ class Drawing():
         screen.blit(FAILT1, FAILRect1)
       pygame.display.flip()
    
-  def Game(Size): #draw main game (mostly board)
+  def Game(self, Size): #draw main game (mostly board)
     Size = int(Size) #update size to be an int for future use
     pygame.draw.rect(screen, SCREEN_COLOUR, (500, 260, 900, 600), 0)
     pygame.draw.rect(screen, WHITE, (500, 260, 900, 585), 4)
@@ -434,7 +442,7 @@ class Drawing():
     Identifier = 'GAME'
     return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size
   
-  def Winner(Turn): #if someone wins, output who it was
+  def Winner(self, Turn): #if someone wins, output who it was
       pygame.draw.rect(screen, SCREEN_COLOUR, (600, 380, 510, 340), 0)
       pygame.draw.rect(screen, WHITE, (600, 380, 510, 340), 4)
       pygame.draw.rect(screen, WHITE, (770, 565, 180, 70), 4)
@@ -460,7 +468,7 @@ class Game():
     def __init__(self):
        pass
 
-    def Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev): #send players down pre-determined set of screens based on choices  
+    def Draw_Next(self, Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev): #send players down pre-determined set of screens based on choices  
       if Next == 'AI_opponent': #if player chooses 'Play vs Computer' on main screen
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
@@ -487,6 +495,7 @@ class Game():
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
+
         if Size == 15:
             for i in range (Size):
                 for j in range (Size): #redraw current Board state, exact positions differ with board size
@@ -496,6 +505,7 @@ class Game():
                     elif Board[i][j] == 'O':
                         pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
                         pygame.display.flip()
+
         elif Size == 19:
             for i in range (Size):
                 for j in range (Size):
@@ -505,15 +515,15 @@ class Game():
                     elif Board[i][j] == 'O':
                         pygame.draw.circle(screen, P2COLOUR, (i*30 + 580, j* 30 + 290), 12, 0)
                         pygame.display.flip()
-        Prev = '' #reset Prev to allow for rules to be re-visited
 
+        Prev = '' #reset Prev to allow for rules to be re-visited
       else: #if no other check works, next screen must be finding board size
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
         
       return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU, Prev #return all relevant potentially updated values
 
-    def Undo_Move(Size, Board, Temp_Board, Turn_Count, Turn):
+    def Undo_Move(self, Size, Board, Temp_Board, Turn_Count, Turn):
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
         Board = []
         
@@ -539,6 +549,7 @@ class Game():
                     elif Temp_Board[i][j] == 'O':
                       pygame.draw.circle(screen, P2COLOUR, (i*35 + 610, j* 35 + 313), 15, 0)
                       pygame.display.flip()
+
         elif Size == 19:
             for i in range (Size):
                 for j in range (Size):
@@ -550,19 +561,22 @@ class Game():
                       pygame.display.flip()
         return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn
       
-    def Player_Turn (Turn_count, Turn):
+    def Player_Turn (self, Turn_count, Turn):
       if Turn_count == 0 and not CPU:
         if random.randint(0,1) == 1:  #random starting player
           Turn = 1
         else:
             Turn = 2
+
       elif Turn_count == 0 and CPU: #if CPU player, human always goes first
           Turn = 1
+
       else:
         if Turn == 1: #alternate turns
             Turn = 2
         elif Turn == 2:
             Turn = 1
+
       Turn_count += 1
 
       pygame.draw.rect(screen, SCREEN_COLOUR, (650, 115, 550, 90), 0) #updated text box displaying current turn
@@ -574,7 +588,7 @@ class Game():
 
       return Turn_count, Turn
 
-    def Update_Board(Turn, XIndex, YIndex):
+    def Update_Board(self, Turn, XIndex, YIndex):
       if Turn == 1: #determine which player is moving, and what colour piece to place
         Colour = P1COLOUR
       else:
@@ -582,11 +596,12 @@ class Game():
         
       if Size == 15: #place piece in chosen position, dimensions etc change with Board Size
         pygame.draw.circle(screen, Colour, (XIndex*35 + 610, YIndex* 35 + 313), 15, 0)
+
       else:
         pygame.draw.circle(screen, Colour, (XIndex*30 + 580, YIndex* 30 + 290), 12, 0)
       pygame.display.flip()
 
-    def Win_Check(Board, Size):
+    def Win_Check(self, Board, Size):
       for x in range (0, Size):
         for y in range (0, Size):
             try: #iterate through full board, if 5 in a row found, return True and end game
@@ -614,7 +629,7 @@ class Game():
                pass
       return False
     
-    def Check_Draw(Board, Size):
+    def Check_Draw(self, Board, Size):
       for x in range (Size): #if no possible moves left (no empty spaces in Board) draw is True
         for y in range (Size):
           if Board[x][y] == ' ':
@@ -626,8 +641,7 @@ class Minimax():
        pass
    
     #Minimax algorithm with Alpha beta Pruning for finding the best move on the game board.
-   
-   def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
+   def Ai_Move(self, Board, depth, alpha, beta, maximisingPlayer):
         valid_locations = Minimax.GetAvailableMoves(Size)
         if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
             is_terminal = True
@@ -689,7 +703,7 @@ class Minimax():
                     break
             return Best_move, value
     
-   def Open_row_search(Piece):
+   def Open_row_search(self, Piece):
         best = 0
         #horizontal count
         for x in range (1, Size-4):
@@ -736,7 +750,7 @@ class Minimax():
                                 best += 10000 #four in a row unblocked (guarantees win)
         return best
 
-   def Score_calc(Board, Max_turn): 
+   def Score_calc(self, Board, Max_turn): 
         Piece = 'O' if Max_turn else 'X' #determine which player's score is being counted
         Opponent = 'X' if Max_turn else 'O'
         best = 0
@@ -831,7 +845,7 @@ class Minimax():
                                 best += 5
         return best
 
-   def GetAvailableMoves(Size):
+   def GetAvailableMoves(self, Size):
         AvailableMoves = []
         for i in range (Size):
             for j in range (Size):
@@ -841,36 +855,39 @@ class Minimax():
         AvailableMoves.sort(reverse=True, key = Minimax.get_Heat) #order moves on importance
         return AvailableMoves
 
-   def Update_HeatMap(HeatMap, Move, HeatTruth):
+   def Update_HeatMap(self, HeatMap, Move, HeatTruth):
         Move_X = Move[0]
         Move_Y = Move[1]
         HeatMap[Move_X][Move_Y] = -1 #ignore taken spaces
+
         for k in range (2): #create range around moves to update
             X_pos = min((14, Move_X + k))
             X_neg = max((0, Move_X - k))
             Y_pos = min((14, Move_Y + k))
             Y_neg = max((0, Move_Y - k))
+
             #if space not taken, and heat value not updated already, increase heat
             if HeatMap[X_pos][Y_pos] > -1 and not HeatTruth[X_pos][Y_pos]: HeatMap[X_pos][Y_pos] += 1; HeatTruth[X_pos][Y_pos] = True
             if HeatMap[X_pos][Y_neg] > -1 and not HeatTruth[X_pos][Y_neg]: HeatMap[X_pos][Y_neg] += 1; HeatTruth[X_pos][Y_neg] = True
             if HeatMap[X_neg][Y_pos] > -1 and not HeatTruth[X_neg][Y_pos]: HeatMap[X_neg][Y_pos] += 1; HeatTruth[X_neg][Y_pos] = True
             if HeatMap[X_neg][Y_neg] > -1 and not HeatTruth[X_neg][Y_neg]: HeatMap[X_neg][Y_neg] += 1; HeatTruth[X_neg][Y_neg] = True
+
         HeatTruth = Minimax.Reset_HeatTruth(HeatTruth) #reset to allow for updates later
         return HeatMap
  
-   def Reset_HeatTruth(HeatTruth):
+   def Reset_HeatTruth(self, HeatTruth):
         for i in range (Size):
             for j in range (Size):
                 HeatTruth[i][j] = False
         return HeatTruth #allows for updating heat again later on
  
-   def Reset_HeatMap(HeatMap):
+   def Reset_HeatMap(self, HeatMap):
         for i in range (len(HeatMap)):
             for j in range (len(HeatMap)):
                 HeatMap[i][j] = 0 #set heatmap to 0 for replays
         return HeatMap
  
-   def get_Heat(list):
+   def get_Heat(self, list):
         return list[2] #returns heat value only
 
 TextInputGroup = CustomGroup() #pre-define textboxes for later use
@@ -897,8 +914,8 @@ while True: #main game loop
             for textinput in TextInputGroup: #if clicking on a textbox, allow for text input
                 if textinput.clicked(mouse_pos):
                     if TextInputGroup.current:
-                        TextInputGroup.current.isSelected = False
-                    textinput.isSelected = True
+                        TextInputGroup.current.Selected = False
+                    textinput.Selected = True
                     TextInputGroup.current = textinput
                     break
                   
@@ -922,18 +939,22 @@ while True: #main game loop
                         else:
                             P2SCORE += 1
                         Drawing.Clean() #reset screen
+
                         Line_Check = False #reset variables that have been changed and will need to be emptied/ returned to default
                         Board = []
                         HeatMap = []
                         HeatTruth = []
                         Turn_count = 0
+
                         if CPU:
                            AI_turn = False #ensure Ai cannot move first if playing aganst it
                            Updated = False
+
                         Turn_count, Turn = Game.Player_Turn(Turn_count, Turn) #create starting player
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program() #redraw all key parts of game screen
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
                         break
+                     
                      else: #otherwise go through pre-determined steps through menus
                         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU, Prev = Game.Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev)
                         break
@@ -978,9 +999,11 @@ while True: #main game loop
         if event.type == pygame.USEREVENT:  #constantly updated timer
           if Identifier == 'GAME':
             Seconds += 1
+
             if Seconds == 60: #if minute passes, update timer as such
               Minutes += 1
               Seconds = 0
+
           elif Identifier == 'RULES':
               pass #if in rules, pause timer
           else: #if not in a game actively, reset timer
@@ -992,6 +1015,7 @@ while True: #main game loop
     for textinput in TextInputGroup:
         textinput.update(mouse_pos)
         textinput.render(screen)
+
     if TextInputGroup.current and TextInputGroup.current.bg.collidepoint(mouse_pos):
         pygame.mouse.set_cursor(ibeam) #if typing, change cursor type
     else:
@@ -1004,4 +1028,5 @@ while True: #main game loop
       MAINRect0.center = (235, 175)
       screen.blit(MAINT0, MAINRect0)
       pygame.display.flip()
+      
     pygame.display.update()
