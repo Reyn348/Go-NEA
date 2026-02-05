@@ -25,14 +25,14 @@ class TextInput(pygame.sprite.Sprite):
        
     def update_text(self, new_text): #change text as it is entered
         temp = self.Font.render(new_text, True, self.Colour)
-        if temp.get_rect().width >= (self.bg.width - 20):
+        if temp.get_rect().width >= (self.bg.Width - 20):
             return
         self.Text_value = new_text
         self.Text = temp
         return self.Text_value
        
     def render(self, display): #output text onto sreen
-        self.pos = self.Text.get_rect(center = (self.bg.x + self.bg.width/2, self.bg.y + self.bg.height/2))
+        self.pos = self.Text.get_rect(center = (self.bg.x + self.bg.Width/2, self.bg.y + self.bg.Height/2))
         if self.Selected:
             pygame.draw.rect(display, self.SelectedColor, self.bg)
         else:
@@ -44,44 +44,52 @@ class CustomGroup(pygame.sprite.Group): #allow for textboxes to be made with eas
         super().__init__()
         self.current = None
        
-    def current(self):
+    def get_current(self):
         return self.current
   
 class basePlayer(ABC):
    def __init__(self):
       pass
    
-   def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth): #allows for player moves to be made
+   def move(self):
+      pass
+   
+   def Move_calc(self):
+        pass
+   
+#classes are mainly used as a convenience for grouping functions and differentiating objects, the following classes and functions in them rely on global variables
+#as such using a self list in these classes would be more inconvenient than not, which is why the inits are empty
+class humanPlayer(basePlayer):
+  def __init__(self):
+      super().__init__()
+      pass
+  
+  def move(self, Turn, Turn_count, Board, x, y, Temp_Board, HeatMap, HeatTruth): #allows for player moves to be made
       Temp_Board = numpy.copy(Board) #just for the undo function
       Updated = False
 
-      if not (CPU and Turn == 2):
-        if Size == 15: #calculate what position in the board is being selected for player moves
-          if x % 35 <= 10:
+      if Size == 15: #calculate what position in the board is being selected for player moves
+        if x % 35 <= 10:
             XIndex = math.floor(x/35)
-          elif x % 35 >= 20:
+        elif x % 35 >= 20:
             XIndex = math.ceil(x/35)
 
-          if y % 35 <= 10:
+        if y % 35 <= 10:
             YIndex = math.floor(y/35)
-          elif y % 35 >= 25:
+        elif y % 35 >= 25:
             YIndex = math.ceil(y/35)
           
-        elif Size == 19:
-          if x % 30 <= 10:
+      elif Size == 19:
+        if x % 30 <= 10:
             XIndex = math.floor(x/30)
-          elif x % 30 >= 20:
+        elif x % 30 >= 20:
             XIndex = math.ceil(x/30)
           
-          if y % 30 <= 10:
+        if y % 30 <= 10:
             YIndex = math.floor(y/30)
-          elif y % 30 >= 20:
+        elif y % 30 >= 20:
             YIndex = math.ceil(y/38)
-
-      else: #CPU directly enters coordinates, so skip calculation
-         XIndex = x
-         YIndex = y
-
+    
       if Board[XIndex][YIndex] == ' ':
         if Turn == 1: #standardise which player is which piece, simply differentiates between the two
             Board[XIndex][YIndex] = 'X'
@@ -100,7 +108,7 @@ class basePlayer(ABC):
         Turn_count, Turn = Game.Player_Turn(Turn_count, Turn) #if no winner, switch to next turn
       return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, [140, 360, 1175, 1275], [650, 740, 510, 610], ['Rules', 'Undo'], 'GAME' #return specific values here to avoid them being updated needlessly
    
-   def Move_calc(self, Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth):
+  def Move_calc(self, Board, Turn, Turn_count, Temp_Board, Line_Check, X_LIST, Y_LIST, BUTTON_LIST, Identifier, HeatMap, HeatTruth):
         Updated = False #no valid move has been entered yet
 
         if Size == 15:
@@ -125,18 +133,37 @@ class basePlayer(ABC):
             else:
                return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
 
-#classes are mainly used as a convenience for grouping functions and differentiating objects, the following classes and functions in them rely on global variables
-#as such using a self list in these classes would be more inconvenient than not, which is why the inits are empty
-class humanPlayer(basePlayer):
-  def __init__(self):
-      super().__init__()
-      pass
-  
 class computerPlayer(basePlayer):
   def __init__(self):
       super().__init__()
       pass
+  
+  def move(self, Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth): #allows for player moves to be made
+      Temp_Board = numpy.copy(Board) #just for the undo function
+      Updated = False
 
+      #CPU directly enters coordinates, so skip calculation
+      XIndex = x
+      YIndex = y
+
+      if Board[XIndex][YIndex] == ' ':
+        if Turn == 1: #standardise which player is which piece, simply differentiates between the two
+            Board[XIndex][YIndex] = 'X'
+        else:
+            Board[XIndex][YIndex] = 'O'  
+
+        Game.Update_Board(Turn, XIndex, YIndex) #update screen wtith move
+        HeatMap = Minimax.Update_HeatMap(HeatMap, [XIndex, YIndex], HeatTruth) #ensure the heatmap is accurate
+        Line_Check = Game.Win_Check(Board, Size) #check is someone has won
+        Updated = True #screen has been updated, used to determine if Ai should make a move
+
+        if Line_Check:
+          X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Winner(Turn) #output winner
+          return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier
+        
+        Turn_count, Turn = Game.Player_Turn(Turn_count, Turn) #if no winner, switch to next turn
+      return Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, [140, 360, 1175, 1275], [650, 740, 510, 610], ['Rules', 'Undo'], 'GAME' #return specific values here to avoid them being updated needlessly
+   
 class Drawing():
   def __init__(self):
       pass
@@ -913,10 +940,10 @@ while True: #main game loop
         if event.type == pygame.MOUSEBUTTONDOWN:
             for textinput in TextInputGroup: #if clicking on a textbox, allow for text input
                 if textinput.clicked(mouse_pos):
-                    if TextInputGroup.current:
-                        TextInputGroup.current.Selected = False
+                    if TextInputGroup.get_current:
+                        TextInputGroup.get_current.Selected = False
                     textinput.Selected = True
-                    TextInputGroup.current = textinput
+                    TextInputGroup.get_current = textinput
                     break
                   
             for i in range (0, len(BUTTON_LIST)): #iterate through possible buttons on a screen
