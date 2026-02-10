@@ -6,45 +6,49 @@ import numpy
 from abc import ABC
 
 class TextInput(pygame.sprite.Sprite):
-    def __init__(self, x, y, Width=100, Height=50, Colour= BLACK, bgcolour=WHITE, SelectedColour=(190,195,198)):
+    def __init__(self, x, y, width=100, height=50, color= BLACK,
+                 bgcolor=WHITE, selectedColor=(190,195,198)):
         super().__init__()
-        self.Text_value = ''
-        self.Selected = False
-        self.Colour = Colour
-        self.bgcolour = bgcolour
-        self.SelectedColor = SelectedColour
-        self.Font = FONT40
-        self.Text = self.Font.render(self.Text_value, True, self.Colour)
-        self.bg = pygame.Rect(x, y, Width, Height)
+        self.text_value = ""
+        self.isSelected = False
+        self.color = color
+        self.bgcolor = bgcolor
+        self.selectedColor = selectedColor
+        self.font = FONT40
+        self.text = self.font.render(self.text_value, True, self.color)
+        self.bg = pygame.Rect(x, y, width, height)
        
-    def clicked(self, mousePos): #determine if textbox has been selected
+    def clicked(self, mousePos):
         if self.bg.collidepoint(mousePos):
-            self.Selected = not(self.Selected)
+            self.isSelected = not(self.isSelected)
             return True
         return False
        
-    def update_text(self, new_text): #change text as it is entered
-        temp = self.Font.render(new_text, True, self.Colour)
-        if temp.get_rect().width >= (self.bg.Width - 20):
+    def update(self, mousePos):
+        pass
+     
+    def update_text(self, new_text):
+        temp = self.font.render(new_text, True, self.color)
+        if temp.get_rect().width >= (self.bg.width - 20):
             return
-        self.Text_value = new_text
-        self.Text = temp
-        return self.Text_value
+        self.text_value = new_text
+        self.text = temp
+        return self.text_value
        
-    def render(self, display): #output text onto sreen
-        self.pos = self.Text.get_rect(center = (self.bg.x + self.bg.Width/2, self.bg.y + self.bg.Height/2))
-        if self.Selected:
-            pygame.draw.rect(display, self.SelectedColor, self.bg)
+    def render(self, display):
+        self.pos = self.text.get_rect(center = (self.bg.x + self.bg.width/2, self.bg.y + self.bg.height/2))
+        if self.isSelected:
+            pygame.draw.rect(display, self.selectedColor, self.bg)
         else:
-            pygame.draw.rect(display, self.bgcolour, self.bg)
-        display.blit(self.Text, self.pos)
+            pygame.draw.rect(display, self.bgcolor, self.bg)
+        display.blit(self.text, self.pos)
        
-class CustomGroup(pygame.sprite.Group): #allow for textboxes to be made with ease
+class CustomGroup(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
         self.current = None
        
-    def get_current(self):
+    def current(self):
         return self.current
   
 class basePlayer(ABC):
@@ -88,7 +92,7 @@ class humanPlayer(basePlayer):
         if y % 30 <= 10:
             YIndex = math.floor(y/30)
         elif y % 30 >= 20:
-            YIndex = math.ceil(y/38)
+            YIndex = math.ceil(y/30)
     
       if Board[XIndex][YIndex] == ' ':
         if Turn == 1: #standardise which player is which piece, simply differentiates between the two
@@ -115,7 +119,7 @@ class humanPlayer(basePlayer):
             x = (mouse_pos[0]-610) #take mouse position and calculate if it is in the Board (based on the size of the board itself)
             y = (mouse_pos[1]-313)
             if(x % 35 <= 10 or x % 35 >= 25) and (y % 35 <= 10 or y % 35 >= 25) and (-10 <= x <= 500 and -10 <= y <= 500): #if close enough to the position, make move
-                Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
+                Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, HeatMap, HeatTruth)
                 Line_Check = Game.Win_Check(Board, Size) #recheck here to return
                 return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
             
@@ -126,7 +130,7 @@ class humanPlayer(basePlayer):
             x = (mouse_pos[0]-580)
             y = (mouse_pos[1]-290)
             if (x % 30 <= 10 or x % 30 >= 20) and (y % 30 <= 10 or y % 30 >= 20) and (-10 <= x <= 600 and -10<= y <+ 600):
-                Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, CPU, HeatMap, HeatTruth)
+                Board, Turn, Turn_count, Temp_Board, Updated, HeatMap, X_LIST, Y_LIST, BUTTON_LIST, Identifier = self.move(Turn, Turn_count, Board, x, y, Temp_Board, HeatMap, HeatTruth)
                 Line_Check = Game.Win_Check(Board, Size)
                 return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn, Turn_count, Temp_Board, Line_Check, Updated, HeatMap
             
@@ -168,7 +172,7 @@ class Drawing():
   def __init__(self):
       pass
    
-  def Main_Menu(self): #draw main menu
+  def Main_Menu(): #draw main menu
       for i in range (5): #iteration here is easier + saves extra lines in main program
         pygame.draw.rect(screen, WHITE, (MAIN_MENU_RECT[i]), 4)
         pygame.display.flip()
@@ -206,7 +210,7 @@ class Drawing():
       Identifier = 'MENU' #current screen
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Rules(self, temp): #draw rules screen
+  def Rules(temp): #draw rules screen
       Prev = '' #prev used to determine if game state needs to be redrawn
       for i in range (3):
         pygame.draw.rect(screen, WHITE, (RULES_RECT[i]), 4)
@@ -217,12 +221,12 @@ class Drawing():
       RulesRect0.center = (180, 50)
       screen.blit(RULEST0, RulesRect0)
       
-      RULEST1 = FONT55.render('•   Gomoku is played on either a 15 x 15 or 19 x 19 square board', True, BLACK)
+      RULEST1 = FONT55.render('-   Gomoku is played on either a 15 x 15 or 19 x 19 square board', True, BLACK)
       RulesRect1 = RULEST1.get_rect()
       RulesRect1.center = (720, 220)
       screen.blit(RULEST1, RulesRect1)
       
-      RULEST2 = FONT55.render('•   The first player is random, and players alternate in placing a', True, BLACK)
+      RULEST2 = FONT55.render('-   The first player is random, and players alternate in placing a', True, BLACK)
       RulesRect2 = RULEST2.get_rect()
       RulesRect2.center = (720, 325)
       screen.blit(RULEST2, RulesRect2)
@@ -232,7 +236,7 @@ class Drawing():
       RulesRect3.center = (720, 365)
       screen.blit(RULEST3, RulesRect3)
       
-      RULEST4 = FONT55.render('•   The winner is the first player to form an unbroken chain of', True, BLACK)
+      RULEST4 = FONT55.render('-   The winner is the first player to form an unbroken chain of', True, BLACK)
       RulesRect4 = RULEST4.get_rect()
       RulesRect4.center = (720, 470)
       screen.blit(RULEST4, RulesRect4)
@@ -242,7 +246,7 @@ class Drawing():
       RulesRect5.center = (720, 510)
       screen.blit(RULEST5, RulesRect5)
 
-      RULEST6 = FONT55.render('•   Once placed, stones cannot be moved or removed from the', True, BLACK)
+      RULEST6 = FONT55.render('-   Once placed, stones cannot be moved or removed from the', True, BLACK)
       RulesRect6 = RULEST6.get_rect()
       RulesRect6.center = (720, 615)
       screen.blit(RULEST6, RulesRect6)
@@ -271,7 +275,7 @@ class Drawing():
          Prev = 'Rules'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Prev
 
-  def P1_Name(self): #draw screen to get player one name
+  def P1_Name(): #draw screen to get player one name
       pygame.draw.rect(screen, (SCREEN_COLOUR),(380, 235, 680, 540), 0)
       pygame.draw.rect(screen, WHITE, (380, 235, 680, 430), 4)
      
@@ -305,7 +309,7 @@ class Drawing():
       BUTTON_LIST = []
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def P2_Name(self): #draw screen for player 2 name
+  def P2_Name(): #draw screen for player 2 name
       for current in TextInputGroup:
           TextInputGroup.remove(current) #get rid of old textbox
      
@@ -324,7 +328,7 @@ class Drawing():
       Identifier = 'P2'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Main_Program(self): #draw bulk of the main game screen
+  def Main_Program(): #draw bulk of the main game screen
       for i in range (5):
           pygame.draw.rect(screen, WHITE, MAIN_PROG_RECT[i], 4)
           pygame.display.flip()
@@ -351,7 +355,7 @@ class Drawing():
       Identifier = 'MAIN'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Board_Size(self): #draw screen to get baord size
+  def Board_Size(): #draw screen to get baord size
       X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Program()
       for current in TextInputGroup:
           TextInputGroup.remove(current) #ensure no textboxes carry over from player names
@@ -390,10 +394,10 @@ class Drawing():
       Identifier = 'BOARD_SIZE'
       return X_LIST, Y_LIST, BUTTON_LIST, Identifier
 
-  def Clean(self):
+  def Clean():
      screen.fill(SCREEN_COLOUR) #covers screen in background colour to reset it
 
-  def Fail(self, error): #only used in player name get
+  def Fail(error): #only used in player name get
       pygame.draw.rect(screen, (SCREEN_COLOUR), (450, 530, 540, 80), 0)
       pygame.draw.rect(screen, (WHITE), (415, 530, 610, 80), 4)
       pygame.display.flip()
@@ -411,7 +415,7 @@ class Drawing():
         screen.blit(FAILT1, FAILRect1)
       pygame.display.flip()
    
-  def Game(self, Size): #draw main game (mostly board)
+  def Game(Size): #draw main game (mostly board)
     Size = int(Size) #update size to be an int for future use
     pygame.draw.rect(screen, SCREEN_COLOUR, (500, 260, 900, 600), 0)
     pygame.draw.rect(screen, WHITE, (500, 260, 900, 585), 4)
@@ -469,7 +473,7 @@ class Drawing():
     Identifier = 'GAME'
     return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size
   
-  def Winner(self, Turn): #if someone wins, output who it was
+  def Winner(Turn): #if someone wins, output who it was
       pygame.draw.rect(screen, SCREEN_COLOUR, (600, 380, 510, 340), 0)
       pygame.draw.rect(screen, WHITE, (600, 380, 510, 340), 4)
       pygame.draw.rect(screen, WHITE, (770, 565, 180, 70), 4)
@@ -495,10 +499,14 @@ class Game():
     def __init__(self):
        pass
 
-    def Draw_Next(self, Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev): #send players down pre-determined set of screens based on choices  
+    def Draw_Next(Next, Size, Temp_Board, Board, Turn, Turn_count, CPU, Prev): #send players down pre-determined set of screens based on choices  
       if Next == 'AI_opponent': #if player chooses 'Play vs Computer' on main screen
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
+
+      elif Next == 'MENU':
+          Drawing.Clean()
+          X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu()
 
       elif Next == 'Player_name': #if player chooses 'Play vs Human' on main screen
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.P1_Name()
@@ -507,10 +515,6 @@ class Game():
         Turn_count, Turn = Game.Player_Turn(Turn_count, Turn)
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Next)
         
-      #elif Next == 'MENU':
-       # Drawing.Clean()
-       # X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Main_Menu()
-    
       elif Next == 'Undo': #if player chooses to undo a move
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn = Game.Undo_Move(Size, Board, Temp_Board, Turn_count, Turn)
       
@@ -544,13 +548,14 @@ class Game():
                         pygame.display.flip()
 
         Prev = '' #reset Prev to allow for rules to be re-visited
+
       else: #if no other check works, next screen must be finding board size
         Drawing.Clean()
         X_LIST, Y_LIST, BUTTON_LIST, Identifier = Drawing.Board_Size()
         
       return  X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size, Board, Turn, Turn_count, CPU, Prev #return all relevant potentially updated values
 
-    def Undo_Move(self, Size, Board, Temp_Board, Turn_Count, Turn):
+    def Undo_Move(Size, Board, Temp_Board, Turn_Count, Turn):
         X_LIST, Y_LIST, BUTTON_LIST, Identifier, Size = Drawing.Game(Size)
         Board = []
         
@@ -588,7 +593,7 @@ class Game():
                       pygame.display.flip()
         return X_LIST, Y_LIST, BUTTON_LIST, Identifier, Board, Turn
       
-    def Player_Turn (self, Turn_count, Turn):
+    def Player_Turn (Turn_count, Turn):
       if Turn_count == 0 and not CPU:
         if random.randint(0,1) == 1:  #random starting player
           Turn = 1
@@ -615,7 +620,7 @@ class Game():
 
       return Turn_count, Turn
 
-    def Update_Board(self, Turn, XIndex, YIndex):
+    def Update_Board(Turn, XIndex, YIndex):
       if Turn == 1: #determine which player is moving, and what colour piece to place
         Colour = P1COLOUR
       else:
@@ -628,7 +633,7 @@ class Game():
         pygame.draw.circle(screen, Colour, (XIndex*30 + 580, YIndex* 30 + 290), 12, 0)
       pygame.display.flip()
 
-    def Win_Check(self, Board, Size):
+    def Win_Check(Board, Size):
       for x in range (0, Size):
         for y in range (0, Size):
             try: #iterate through full board, if 5 in a row found, return True and end game
@@ -656,7 +661,7 @@ class Game():
                pass
       return False
     
-    def Check_Draw(self, Board, Size):
+    def Check_Draw(Board, Size):
       for x in range (Size): #if no possible moves left (no empty spaces in Board) draw is True
         for y in range (Size):
           if Board[x][y] == ' ':
@@ -668,7 +673,7 @@ class Minimax():
        pass
    
     #Minimax algorithm with Alpha beta Pruning for finding the best move on the game board.
-   def Ai_Move(self, Board, depth, alpha, beta, maximisingPlayer):
+   def Ai_Move(Board, depth, alpha, beta, maximisingPlayer):
         valid_locations = Minimax.GetAvailableMoves(Size)
         if Game.Win_Check(Board, Size) or Game.Check_Draw(Board, Size): 
             is_terminal = True
@@ -730,14 +735,14 @@ class Minimax():
                     break
             return Best_move, value
     
-   def Open_row_search(self, Piece):
+   def Open_row_search(Piece):
         best = 0
         #horizontal count
         for x in range (1, Size-4):
             for y in range (Size):
                     if Board[x][y] == Board[x+1][y] == Board[x+2][y] == Piece:
                         if Board[x-1][y] == Board[x+3][y] == ' ':
-                            best += 10 #three in a row (unblocked)
+                            best += 100 #three in a row (unblocked)
                         elif Board[x+3][y] == Piece:
                             best += 1000 #four in a row
                             if Board[x-1][y] == Board[x+4][y] == ' ':
@@ -748,7 +753,7 @@ class Minimax():
             for y in range (1, Size-4):
                     if Board[x][y] == Board[x][y+1] == Board[x][y+2] == Piece:
                         if Board[x][y-1] == Board[x][y+3] == ' ':
-                            best += 10 #three in a row (unblocked)
+                            best += 100 #three in a row (unblocked)
                         elif Board[x][y+3] == Piece:
                             best += 1000 #four in a row
                             if Board[x][y-1] == Board[x][y+4] == ' ':
@@ -759,7 +764,7 @@ class Minimax():
             for y in range (1, Size-4):
                     if Board[x][y] == Board[x+1][y+1] == Board[x+2][y+2] == Piece:
                         if Board[x-1][y-1] == Board[x+3][y+3] == ' ':
-                            best += 10 #three in a row (unblocked)
+                            best += 100 #three in a row (unblocked)
                         elif Board[x+3][y+3] == Piece:
                             best += 1000 #four in a row
                             if Board[x-1][y-1] == Board[x+4][y+4] == ' ':
@@ -770,14 +775,14 @@ class Minimax():
             for y in range (1, Size-4):
                     if Board[x][y] == Board[x-1][y+1] == Board[x-2][y+2] == Piece:
                         if Board[x+1][y-1] == Board[x-3][y+3] == ' ':
-                            best += 10 #three in a row (unblocked)
+                            best += 100 #three in a row (unblocked)
                         elif Board[x-3][y+3] == Piece:
                             best += 1000 #four in a row
                             if Board[x+1][y-1] == Board[x-4][y+4] == ' ':
                                 best += 10000 #four in a row unblocked (guarantees win)
         return best
 
-   def Score_calc(self, Board, Max_turn): 
+   def Score_calc(Board, Max_turn): 
         Piece = 'O' if Max_turn else 'X' #determine which player's score is being counted
         Opponent = 'X' if Max_turn else 'O'
         best = 0
@@ -872,7 +877,7 @@ class Minimax():
                                 best += 5
         return best
 
-   def GetAvailableMoves(self, Size):
+   def GetAvailableMoves(Size):
         AvailableMoves = []
         for i in range (Size):
             for j in range (Size):
@@ -882,7 +887,7 @@ class Minimax():
         AvailableMoves.sort(reverse=True, key = Minimax.get_Heat) #order moves on importance
         return AvailableMoves
 
-   def Update_HeatMap(self, HeatMap, Move, HeatTruth):
+   def Update_HeatMap(HeatMap, Move, HeatTruth):
         Move_X = Move[0]
         Move_Y = Move[1]
         HeatMap[Move_X][Move_Y] = -1 #ignore taken spaces
@@ -902,19 +907,19 @@ class Minimax():
         HeatTruth = Minimax.Reset_HeatTruth(HeatTruth) #reset to allow for updates later
         return HeatMap
  
-   def Reset_HeatTruth(self, HeatTruth):
+   def Reset_HeatTruth(HeatTruth):
         for i in range (Size):
             for j in range (Size):
                 HeatTruth[i][j] = False
         return HeatTruth #allows for updating heat again later on
  
-   def Reset_HeatMap(self, HeatMap):
+   def Reset_HeatMap(HeatMap):
         for i in range (len(HeatMap)):
             for j in range (len(HeatMap)):
                 HeatMap[i][j] = 0 #set heatmap to 0 for replays
         return HeatMap
  
-   def get_Heat(self, list):
+   def get_Heat(list):
         return list[2] #returns heat value only
 
 TextInputGroup = CustomGroup() #pre-define textboxes for later use
@@ -938,12 +943,12 @@ while True: #main game loop
             sys.exit()
            
         if event.type == pygame.MOUSEBUTTONDOWN:
-            for textinput in TextInputGroup: #if clicking on a textbox, allow for text input
+            for textinput in TextInputGroup:
                 if textinput.clicked(mouse_pos):
-                    if TextInputGroup.get_current:
-                        TextInputGroup.get_current.Selected = False
-                    textinput.Selected = True
-                    TextInputGroup.get_current = textinput
+                    if TextInputGroup.current:
+                        TextInputGroup.current.isSelected = False
+                    textinput.isSelected = True
+                    TextInputGroup.current = textinput
                     break
                   
             for i in range (0, len(BUTTON_LIST)): #iterate through possible buttons on a screen
